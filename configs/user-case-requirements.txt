@@ -1,0 +1,2 @@
+# Optional local builder for tools/build_user_case.py, in addition to pipeline requirements.
+rapidocr-onnxruntime==1.4.4

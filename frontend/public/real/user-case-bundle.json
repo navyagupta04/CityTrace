@@ -1,0 +1,259 @@
+{
+  "clips": [
+    {
+      "source": "real",
+      "expires_at": "2026-10-31T23:59:59+05:30",
+      "id": "user-vehicle-a",
+      "video": "user/user-vehicle-a.mp4",
+      "fps": 29.404488425516877,
+      "width": 1080,
+      "height": 1920,
+      "duration_s": 3.5368749999999998,
+      "sha256": "4c9157c21974935a0ccd885aee1c9ac89a6dd44b128a1a6add11d5c8e84e1841",
+      "camera_id": "C10",
+      "start_ist": "2026-10-01T09:00:00+05:30",
+      "staged": true,
+      "evidence": {
+        "plate": "AI07204",
+        "display_plate": "AI 0720-4",
+        "identity_source": "user_confirmed",
+        "vehicle_label": "Daylight blue van",
+        "colour": "Blue",
+        "vehicle_class": "van",
+        "make": "Peugeot",
+        "crop": "user/user-vehicle-a-plate.png",
+        "poster": "user/user-vehicle-a-frame.jpg",
+        "frame": 85,
+        "time_s": 2.8907151442307693,
+        "roi": [
+          845,
+          1165,
+          1073,
+          1233
+        ],
+        "original_filename": "vehicle.mp4",
+        "ocr_text": "A1 0720-4",
+        "ocr_confidence": 0.9678255120913187,
+        "ocr_engine": "RapidOCR 1.4.4 / PP-OCRv4",
+        "retention_basis": "User explicitly requested plate crops for these two clips."
+      }
+    },
+    {
+      "source": "real",
+      "expires_at": "2026-10-31T23:59:59+05:30",
+      "id": "user-vehicle-b",
+      "video": "user/user-vehicle-b.mp4",
+      "fps": 24.0,
+      "width": 1280,
+      "height": 720,
+      "duration_s": 10.0,
+      "sha256": "32be2881238375b252e10930aaeeba7ebc4522529c9bcf377083de44e38cf35c",
+      "camera_id": "C34",
+      "start_ist": "2026-10-01T09:03:00+05:30",
+      "staged": true,
+      "evidence": {
+        "plate": "AI07204",
+        "display_plate": "AI 0720-4",
+        "identity_source": "user_confirmed",
+        "vehicle_label": "Night dark sedan",
+        "colour": "Black",
+        "vehicle_class": "car",
+        "make": "Mercedes-Benz",
+        "crop": "user/user-vehicle-b-plate.png",
+        "poster": "user/user-vehicle-b-frame.jpg",
+        "frame": 135,
+        "time_s": 5.625,
+        "roi": [
+          474,
+          374,
+          621,
+          451
+        ],
+        "original_filename": "WhatsApp Video 2026-10-01 at 1.21.12 AM.mp4",
+        "ocr_text": "A1020-4",
+        "ocr_confidence": 0.7150513274329049,
+        "ocr_engine": "RapidOCR 1.4.4 / PP-OCRv4",
+        "retention_basis": "User explicitly requested plate crops for these two clips."
+      }
+    }
+  ],
+  "analysis": {
+    "user-vehicle-a": {
+      "source": "real",
+      "expires_at": "2026-10-31T23:59:59+05:30",
+      "fps": 29.404488425516877,
+      "frame_stride": 1,
+      "frames": []
+    },
+    "user-vehicle-b": {
+      "source": "real",
+      "expires_at": "2026-10-31T23:59:59+05:30",
+      "fps": 24.0,
+      "frame_stride": 1,
+      "frames": []
+    }
+  },
+  "tracks": {
+    "user-vehicle-a": [],
+    "user-vehicle-b": []
+  },
+  "counts": {
+    "user-vehicle-a": {
+      "source": "real",
+      "expires_at": "2026-10-31T23:59:59+05:30",
+      "lines": [],
+      "crossings": [],
+      "totals": {},
+      "direction_totals": {},
+      "unique_tracks": 0,
+      "track_classes": {},
+      "dwell": {
+        "mean_s": null,
+        "median_s": null,
+        "values_s": []
+      }
+    },
+    "user-vehicle-b": {
+      "source": "real",
+      "expires_at": "2026-10-31T23:59:59+05:30",
+      "lines": [],
+      "crossings": [],
+      "totals": {},
+      "direction_totals": {},
+      "unique_tracks": 0,
+      "track_classes": {},
+      "dwell": {
+        "mean_s": null,
+        "median_s": null,
+        "values_s": []
+      }
+    }
+  },
+  "events": [
+    {
+      "source": "real",
+      "expires_at": "2026-10-31T23:59:59+05:30",
+      "clip_id": "user-vehicle-a",
+      "camera_id": "C10",
+      "ts_ist": "2026-10-01T09:00:00+05:30",
+      "video_time_s": 2.8907151442307693,
+      "track_id": 1,
+      "confidence": 0,
+      "staged": true,
+      "identity_source": "user_confirmed",
+      "id": "clone-ai07204",
+      "type": "clone_suspect",
+      "plate": "AI07204",
+      "sightings": [
+        {
+          "source": "real",
+          "expires_at": "2026-10-31T23:59:59+05:30",
+          "clip_id": "user-vehicle-a",
+          "camera_id": "C10",
+          "ts_ist": "2026-10-01T09:00:00+05:30",
+          "video_time_s": 2.8907151442307693,
+          "track_id": 1,
+          "confidence": 0,
+          "staged": true,
+          "identity_source": "user_confirmed"
+        },
+        {
+          "source": "real",
+          "expires_at": "2026-10-31T23:59:59+05:30",
+          "clip_id": "user-vehicle-b",
+          "camera_id": "C34",
+          "ts_ist": "2026-10-01T09:03:00+05:30",
+          "video_time_s": 5.625,
+          "track_id": 1,
+          "confidence": 0,
+          "staged": true,
+          "identity_source": "user_confirmed"
+        }
+      ],
+      "explanation": "Two visibly different vehicles share the user-confirmed plate AI 0720-4: a blue van and a dark sedan. Review both source recordings and crops. This is a suspected duplicate-plate test case, not a verified crime. Delhi camera locations and capture times are staged; original recording provenance is unverified.",
+      "factors": [
+        {
+          "label": "Same user-confirmed plate on two different vehicle appearances",
+          "points": 0
+        }
+      ]
+    },
+    {
+      "source": "real",
+      "expires_at": "2026-10-31T23:59:59+05:30",
+      "clip_id": "user-vehicle-a",
+      "camera_id": "C10",
+      "ts_ist": "2026-10-01T09:00:00+05:30",
+      "video_time_s": 2.8907151442307693,
+      "track_id": 1,
+      "confidence": 0,
+      "staged": true,
+      "identity_source": "user_confirmed",
+      "id": "watchlist-user-vehicle-a",
+      "type": "blacklist_match",
+      "plate": "AI07204",
+      "explanation": "User-requested test watchlist match for AI 0720-4. Identity is confirmed by the user; this is not an external blacklist lookup.",
+      "factors": [
+        {
+          "label": "User-confirmed plate on test watchlist",
+          "points": 0
+        }
+      ]
+    },
+    {
+      "source": "real",
+      "expires_at": "2026-10-31T23:59:59+05:30",
+      "clip_id": "user-vehicle-b",
+      "camera_id": "C34",
+      "ts_ist": "2026-10-01T09:03:00+05:30",
+      "video_time_s": 5.625,
+      "track_id": 1,
+      "confidence": 0,
+      "staged": true,
+      "identity_source": "user_confirmed",
+      "id": "watchlist-user-vehicle-b",
+      "type": "blacklist_match",
+      "plate": "AI07204",
+      "explanation": "User-requested test watchlist match for AI 0720-4. Identity is confirmed by the user; this is not an external blacklist lookup.",
+      "factors": [
+        {
+          "label": "User-confirmed plate on test watchlist",
+          "points": 0
+        }
+      ]
+    }
+  ],
+  "trajectories": [
+    {
+      "source": "real",
+      "expires_at": "2026-10-31T23:59:59+05:30",
+      "plate": "AI07204",
+      "stops": [
+        {
+          "source": "real",
+          "expires_at": "2026-10-31T23:59:59+05:30",
+          "clip_id": "user-vehicle-a",
+          "camera_id": "C10",
+          "ts_ist": "2026-10-01T09:00:00+05:30",
+          "video_time_s": 2.8907151442307693,
+          "track_id": 1,
+          "confidence": 0,
+          "staged": true,
+          "identity_source": "user_confirmed"
+        },
+        {
+          "source": "real",
+          "expires_at": "2026-10-31T23:59:59+05:30",
+          "clip_id": "user-vehicle-b",
+          "camera_id": "C34",
+          "ts_ist": "2026-10-01T09:03:00+05:30",
+          "video_time_s": 5.625,
+          "track_id": 1,
+          "confidence": 0,
+          "staged": true,
+          "identity_source": "user_confirmed"
+        }
+      ]
+    }
+  ]
+}

@@ -1,10 +1,11 @@
 export interface Provenance {source:'real';expires_at:string}
-export interface RealClip extends Provenance {id:string;video:string;redacted_video?:string;fps:number;width:number;height:number;duration_s:number;sha256:string;camera_id:string;start_ist:string;staged:boolean}
+export interface ClipEvidence {plate:string;display_plate:string;identity_source:'user_confirmed';vehicle_label:string;colour:string;vehicle_class:string;make:string;crop:string;poster:string;frame:number;time_s:number;roi:number[];original_filename:string;ocr_text:string;ocr_confidence:number|null;ocr_engine:string;retention_basis:string}
+export interface RealClip extends Provenance {id:string;video:string;redacted_video?:string;fps:number;width:number;height:number;duration_s:number;sha256:string;camera_id:string;start_ist:string;staged:boolean;evidence?:ClipEvidence}
 export interface Box {track_id:number;class:string;confidence:number;box:[number,number,number,number];colour:string;plate?:string;plate_confidence?:number;plate_box?:number[]}
 export interface Analysis extends Provenance {fps:number;frame_stride:number;frames:{frame:number;timestamp:number;detections:Box[]}[]}
 export interface Track extends Provenance {track_id:number;class:string;colour:string;first_frame:number;last_frame:number;best_frame:number;dwell_s:number;best_confidence:number;plate:{text:string|null;format_valid:boolean;vote_confidence:number;n_reads:number;status:'read'|'abstain';reason?:string;alternatives:{text:string;score:number}[]}}
 export interface Counts extends Provenance {lines:{id:string;start:[number,number];end:[number,number]}[];crossings:{track_id:number;class:string;direction:string;video_time_s:number;minute:number}[];totals:Record<string,number>;direction_totals:Record<string,number>;unique_tracks:number;track_classes:Record<string,number>;dwell:{mean_s:number|null;median_s:number|null;values_s:number[]}}
-export interface Stop extends Provenance {clip_id:string;camera_id:string;ts_ist:string;video_time_s:number;track_id:number;confidence:number;staged:boolean}
+export interface Stop extends Provenance {clip_id:string;camera_id:string;ts_ist:string;video_time_s:number;track_id:number;confidence:number;staged:boolean;identity_source?:'user_confirmed'}
 export interface RealTrajectory extends Provenance {plate:string;stops:Stop[]}
 export interface RealEvent extends Stop {id:string;type:string;plate:string;explanation:string;factors:{label:string;points:number}[];sightings?:Stop[];distance_km?:number;elapsed_s?:number;implied_kmh?:number}
 export interface Accuracy {value:number;ci95:[number,number];n:number}

@@ -7,7 +7,7 @@ export function HashRouter({children}:{children:ReactNode}){const [value,setValu
 export const useLocation=()=>useContext(Context);
 export function useNavigate(){return (to:string,options?:{state?:unknown;replace?:boolean})=>{history[options?.replace?'replaceState':'pushState'](options?.state||null,'',`/#${to}`);window.dispatchEvent(new Event('citytrace:navigate'));};}
 export function useSearchParams(){const l=useLocation();return [useMemo(()=>new URLSearchParams(l.search),[l.search])] as const;}
-export function useParams(){const l=useLocation();return {id:l.pathname.match(/^\/vehicles\/([^/]+)/)?.[1]};}
+export function useParams(){const l=useLocation();return {id:l.pathname.match(/^\/(?:real-)?vehicles\/([^/]+)/)?.[1]};}
 export function Link({to,state,onClick,children,...props}:Omit<AnchorHTMLAttributes<HTMLAnchorElement>,'href'> & {to:string;state?:unknown;children:ReactNode}){const navigate=useNavigate();return <a {...props} href={`/#${to}`} onClick={e=>{onClick?.(e);if(e.defaultPrevented||e.ctrlKey||e.metaKey||e.shiftKey||e.altKey||e.button!==0)return;e.preventDefault();navigate(to,{state});}}>{children}</a>;}
 export function NavLink({to,className,children,...props}:{to:string;className?:(args:{isActive:boolean})=>string;children:ReactNode;end?:boolean}){const l=useLocation(),active=l.pathname===to;return <Link to={to} className={className?.({isActive:active})} aria-current={active?'page':undefined} {...(props.end?{}:{})}>{children}</Link>;}
 export function Navigate({to,replace}:{to:string;replace?:boolean}){useEffect(()=>{history[replace?'replaceState':'pushState'](null,'',`/#${to}`);window.dispatchEvent(new Event('citytrace:navigate'));},[to,replace]);return null;}
