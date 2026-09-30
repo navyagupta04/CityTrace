@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+.pytest_cache/
+data/
+*.sqlite3*
+.env
+models/
+output/
+.uv-cache/
+.python/
+.npm-cache/
+.tooling/
+frontend/node_modules/
+frontend/*.tsbuildinfo

@@ -1,0 +1,16 @@
+.venv
+.git
+.uv-cache
+.python
+.npm-cache
+.tooling
+__pycache__
+.pytest_cache
+data
+output
+models
+tests
+.env
+frontend/node_modules
+frontend/dist
+frontend/*.tsbuildinfo

@@ -1,0 +1,10 @@
+Delhi boundary attribution
+
+Delhi_Boundary.geojson is redistributed unchanged from DataMeet India community, Delhi Municipal Spatial Data:
+https://github.com/datameet/Municipal_Spatial_Data/blob/master/Delhi/Delhi_Boundary.geojson
+
+Delhi-specific license: Creative Commons Attribution-ShareAlike 2.5 India.
+https://creativecommons.org/licenses/by-sa/2.5/in/
+Source and license notice: https://github.com/datameet/Municipal_Spatial_Data/blob/master/Delhi/Readme.md
+
+Retrieved 30 September 2026. This source has a Delhi-specific license that takes precedence over the repository default. The original source is included in src/demo/delhi-boundary.json. Display coordinates are projected for SVG rendering. The region groups, roads and camera locations are illustrative mock data, not official district boundaries or surveyed camera assets.
