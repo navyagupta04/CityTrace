@@ -1,0 +1,4 @@
+export function percentile(values:number[],p:number){if(!values.length)return null;const a=[...values].sort((a,b)=>a-b),i=(a.length-1)*p,lo=Math.floor(i);return a[lo]+(a[Math.ceil(i)]-a[lo])*(i-lo);}
+export function zScore(value:number,baseline:number[]){if(baseline.length<2)return null;const mean=baseline.reduce((a,b)=>a+b,0)/baseline.length,sd=Math.sqrt(baseline.reduce((n,v)=>n+(v-mean)**2,0)/baseline.length);return sd?(value-mean)/sd:0;}
+export function bufferIndex(durations:number[]){const p=percentile(durations,.95),mean=durations.reduce((a,b)=>a+b,0)/durations.length;return p!=null&&mean?(p-mean)/mean:null;}
+export function dayHour(rows:{timestamp:string}[]){const cells=Array.from({length:7},()=>Array<number>(24).fill(0));for(const r of rows){const d=new Date(Date.parse(r.timestamp)+19800000),day=d.getUTCDate()-24;if(day>=0&&day<7)cells[day][d.getUTCHours()]++;}return cells;}

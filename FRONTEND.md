@@ -1,6 +1,21 @@
-# CityTrace Delhi mock-testing demo (current build)
+# CityTrace Delhi command console
 
-The current build is a **frontend-only React demo**. `VITE_USE_MOCK` defaults to `true`; the typed adapter resolves deterministic in-memory data with 180 ms simulated latency. No real OCR, authentication, registry lookup, WebSocket or backend API is used by the demo. The existing Python implementation is retained separately below.
+The current build is a **frontend-only React demo**. `VITE_USE_MOCK` defaults to `true`; the typed adapter resolves deterministic in-memory data with 180 ms simulated latency. No production authentication, registry connector or browser OCR is provided. A separate offline pipeline now exports real recorded-video detections. The existing Python implementation is retained separately below.
+
+
+## Real footage update · 1 October 2026
+
+Open **Live monitoring** or **Video analysis** for the default real recording workspace. It loads `/real/manifest.json`, plays the licensed clips, draws model boxes and counting lines, and seeks to each track’s best frame. Counting, colour and dwell are unvalidated model estimates from recorded clips, not city traffic. No new frontend runtime dependency was added.
+
+The new **Real footage** analytics tab, **Measured on real footage** OCR panel, **Deep dive**, **Privacy & DPDP**, and synthetic registry extension are available. Existing seed 26127, 1,842 sightings, scripted plates and 30-second scenario remain unchanged. Human-facing placeholder wording was replaced with explicit synthetic/simulated source labels. Internal adapter names and environment flags remain compatible.
+
+The samples contain no supplied readable-plate labels or configured plate models. Accepted real plates, identity alerts and real plate trajectories are therefore empty. Real trajectory, search-match, profile and alert evidence components consume those exports when populated; they do not manufacture a plate to demonstrate the flow. Use **DL01AB1234** in the synthetic trajectory section to test a full Delhi route.
+
+Offline real roads are on by default: 3.1 MB OSM extract, snapped illustrative cameras and 119/130 directed route geometries. Eleven links retain fallback geometry. Region zoom, heatmaps and the schematic toggle remain available. Road routing does not model turn restrictions and is not a navigation system.
+
+The privacy page is an admin demo workspace. Raw video is blocked for Viewer unless a redacted preview is supplied. Masking does not secure the static data. Rights requests, audit and frontend erasure/purge are in memory; permanent local bundle purge is a pipeline command. Keep the app bound to localhost.
+
+See [pipeline commands and limitations](pipeline/README.md), [measured report](docs/ACCURACY_REPORT.md), [data licences](docs/DATA_AND_LICENSES.md), [privacy controls](docs/PRIVACY_DPDP.md), and [complete changed-file list](docs/REAL_FOOTAGE_FILES.md). The older gateway/CLI notes below describe the retained legacy implementation, not the default frontend adapter.
 
 ## Try it now
 
@@ -10,18 +25,18 @@ Open http://127.0.0.1:8000/?v=delhi-final#/trajectories and click **Sign in to c
 2. **RJ14CB2210** is the second route. **RJ14CB22I0** deliberately tests an OCR look-alike: accept the 0.5-distance suggestion. **UP16AX9912** is the scripted watchlist scenario. **DL08CX9090** is the impossible-travel example.
 3. Select a region in the map or scope control. All Delhi shows the full NCT boundary; regional views zoom to five camera nodes. These eight operational regions are illustrative groupings, not official district boundaries.
 4. Open **Density & analytics**. Play the 24-hour heatmap time-lapse, choose a region/date, inspect speed colours, the OD matrix, ranked hotspots, or daily Trends. Counts are generated from a separate seeded traffic model, not an accuracy benchmark or counts extracted from the clips.
-5. Open **Attribute search** and choose **White cars**: 27 mock identities match, including DL01AB1234. Combine class, colour, make, region, camera and confidence filters. Results are paginated and link to trajectories. When the selected date has no readings, trajectory search switches to that vehicle's latest demo date.
-6. Open **Live monitoring**. Animated Delhi scenes are labeled **SIMULATED CCTV**. Change Feed type to **Recorded traffic samples** for two real, locally bundled Intel clips (30.16 seconds and 53.92 seconds). These clips are not Delhi footage and are not evidence for the generated number plates.
+5. Open **Attribute search** and choose **White cars**: 27 synthetic identities match, including DL01AB1234. Combine class, colour, make, region, camera and confidence filters. Results are paginated and link to trajectories. When the selected date has no readings, trajectory search switches to that vehicle's latest demo date.
+6. Open **Live monitoring**. **Recorded traffic samples** is now the default, with pipeline overlays. Animated Delhi scenes remain available under **Simulated Delhi CCTV**. There are two real, locally bundled Intel clips (30.16 seconds and 53.92 seconds). These clips are not Delhi footage and are not evidence for the generated number plates.
 7. Run the 30-second demo scenario, navigate to Alerts, and review the new watchlist and impossible-travel alerts. The review dialog shows additive priority factors and distance / elapsed-time arithmetic. Save a workflow change, then inspect Audit log.
 8. OCR Lab contains a simulated accuracy benchmark and a small Confirm / Correct / Reject queue, plus the existing text-read voting playground. Control room wall combines the map, four feeds, rotating historical reads and alerts; Full screen works through the browser Fullscreen API.
 
 ## Dataset and state
 
-- 40 cameras, 65 undirected mock road links, 160 identities, 1,842 sightings.
+- 40 cameras, 65 undirected synthetic road links, 160 identities, 1,842 sightings.
 - Searchable observation dates: 24–30 September 2026; 720 modeled hourly traffic buckets across September.
 - DL01AB1234 has 126 sightings across seven days. Number plates, owners, appearances, scores, OCR performance and forecasts are synthetic.
 - `src/demo/model.ts` is the seeded source of truth, using seed 26127. `src/demo/api.ts` provides search, profile, registry, watchlist, audit, notes, workflow and sample-video responses.
-- Mock authentication, theme, interactions and datasets are held in memory. Reload resets all demo state. **Reset scenario** restores only seeded alerts, preserving the session and audit history.
+- synthetic authentication, theme, interactions and datasets are held in memory. Reload resets all demo state. **Reset scenario** restores only seeded alerts, preserving the session and audit history.
 - Trajectories support GeoJSON download and browser print/PDF. Traffic CSV downloads include a UTF-8 BOM.
 - Shared scenario/ticker timers and animated feeds pause when the document is hidden. CSS respects reduced motion.
 
@@ -127,7 +142,7 @@ The Dockerfile now builds React in a Node stage and copies the result into the P
 | Overview | API-backed KPIs, count-up animation, camera network, recent alerts, hourly chart, density ranking, evidence status, simulation control |
 | Map | Local Leaflet grid, road topology, density rings, camera selection, corridor colours, optional online OpenStreetMap tiles |
 | Vehicle search | Partial and fuzzy candidates, required reason, pagination, audited requests |
-| Vehicle profile | Plate validation/confidence, watchlist state, explicitly mock registration/owner/challans, reason-audited owner unmasking, sightings filters, raw OCR evidence, alerts, case notes |
+| Vehicle profile | Plate validation/confidence, watchlist state, explicitly synthetic registration/owner/challans, reason-audited owner unmasking, sightings filters, raw OCR evidence, alerts, case notes |
 | Trajectory | Numbered hops, inferred segments, route playback, moving marker, scrubber, 1×/2×/4×/8× speed, trips split by dwell time |
 | Attribute search | Class/camera/read-confidence/plate-availability filters; explicitly simulated colour attributes for simulator events; unidentified traffic tracks |
 | Video analysis | Authenticated Intel samples, local video playback, camera selection, real imported per-frame JSON overlays, confidence/class/ID toggles, speed and frame stepping, track counts and highlighting |
@@ -138,7 +153,7 @@ The Dockerfile now builds React in a Node stage and copies the result into the P
 | Audit | Admin-only filterable access history including searches, login attempts and owner-detail access |
 | Administration | User-role inventory and evidence verification; local API reference |
 
-Case-file export uses the browser print dialog's **Save as PDF**. It includes the evidence-chain status/head and the observed hop list. It is not a server-generated signed PDF. Owner details are visually masked in print and the mock-record disclaimer is included.
+Case-file export uses the browser print dialog's **Save as PDF**. It includes the evidence-chain status/head and the observed hop list. It is not a server-generated signed PDF. Owner details are visually masked in print and the synthetic-record disclaimer is included.
 
 ## Recorded video overlays
 
@@ -164,9 +179,9 @@ The CLI uses confidence ≥0.4, EMA box smoothing, and excludes tiny boxes / tra
 
 This change implements the **React frontend**, plus API adapters needed by its supported screens. The expanded product brief also describes services that are not installed or configured. The UI does not fake their results:
 
-- No server-side video upload/job queue, progress processing service, counting-line analytics, dwell tracking or trail export. Local playback + imported real analysis and the CLI are supported.
+- No server-side video upload/job queue or processing service. The new offline pipeline provides recorded-clip counting lines, track dwell, hashes and static JSON overlays; it does not provide live city surveillance.
 - No image-to-text model running inside OCR Lab; its image control previews only. Voting and format validation operate on supplied OCR reads.
-- No official registry/e-Challan connectivity, satellite tile provider, geofence polygons or hardware camera heartbeat service. Registry data is explicitly mock in demo mode.
+- No official registry/e-Challan connectivity, satellite tile provider, geofence polygons or hardware camera heartbeat service. Registry data is explicitly synthetic in demo mode.
 - No trained colour/make/model classifier, appearance embeddings, cross-camera appearance re-identification or saved-search alert service. Demo colour is deterministic synthetic metadata, not a prediction. Attribute confidence is not substituted with a made-up value.
 - No week-on-week delta without historical data. KPI notes explicitly state the retained-data scope.
 - No user-provisioning UI, watchlist categories/expiry scheduler or MFA identity-provider integration. The optional second-factor field explains that it is not configured and the server rejects nonempty codes rather than pretending to validate them.
@@ -181,7 +196,7 @@ New profile, owner, attribute, workflow, video and OCR endpoints require bearer 
 
 **Legacy compatibility:** the original demo ingestion/analytics/trajectory APIs still support the earlier `X-Role` interface. In demo mode it is self-selected, so the whole demo must remain bound to localhost. JWT sign-in is not a claim that the legacy demo API is production-secure. Gateway mode requires `ANPR_API_KEY` for legacy access; place that interface behind a trusted authenticated gateway, disable public demo accounts, and add proper identity provisioning for a deployment. Neither this frontend nor the previous backend is a certified government system.
 
-Theme preference is the only application data stored in localStorage. Plate searches, owner details and credentials are not persisted there. Routes carry plate query text only when explicitly searching; never expose this local demo publicly. No analytics or remote fonts are loaded. Leaflet CSS/JS and all charts/icons are bundled locally. Selecting Streets mode requests public OSM tiles; failures fall back to the local grid.
+Theme preference is the only application data stored in localStorage. Plate searches, owner details and credentials are not persisted there. Routes carry plate query text only when explicitly searching; never expose this local demo publicly. No analytics or remote fonts are loaded. All charts/icons are bundled locally. The map uses offline OSM vectors with an optional schematic fallback; no raster tile requests are needed.
 
 ## Verification
 

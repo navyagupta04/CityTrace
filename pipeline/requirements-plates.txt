@@ -1,0 +1,5 @@
+-r requirements.txt
+# Optional only: local weights must be supplied; engines are not downloaded implicitly.
+ultralytics>=8.3,<9
+paddleocr>=2.7,<3
+paddlepaddle>=2.6,<3

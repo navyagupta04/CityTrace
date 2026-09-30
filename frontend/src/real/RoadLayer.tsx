@@ -1,0 +1,5 @@
+import { useEffect,useState } from 'react';
+export interface RealRoadData {roads:{features:{geometry:{coordinates:[number,number][]}}[]};routes:{real_position:Record<string,{lat:number;lon:number}>;links:Record<string,{coordinates:[number,number][];road_distance_km:number;straight_distance_km:number}>}}
+let pending:Promise<RealRoadData|null>|undefined;
+export function useRoads(){const [data,setData]=useState<RealRoadData|null>(null);useEffect(()=>{let active=true;pending??=Promise.all(['/real/roads.json','/real/routes.json'].map(async p=>{const r=await fetch(p);if(!r.ok)throw Error();return r.json();})).then(([roads,routes])=>({roads,routes})).catch(()=>null);pending.then(d=>{if(active)setData(d);});return()=>{active=false;};},[]);return data;}
+export function RoadLayer({data,project}:{data:RealRoadData;project:(lon:number,lat:number)=>[number,number]}){return <g aria-label="OpenStreetMap Delhi roads">{data.roads.features.map((f,i)=><polyline key={i} className="osm-road" vectorEffect="non-scaling-stroke" points={f.geometry.coordinates.map(([lon,lat])=>project(lon,lat).join(',')).join(' ')}/>)}</g>;}

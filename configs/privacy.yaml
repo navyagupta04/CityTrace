@@ -1,0 +1,7 @@
+retain_crops: false
+faces: false
+pseudonymise: false
+salt_environment_variable: CITYTRACE_PLATE_SALT
+reads_days: 90
+evidence_days: 365
+raw_preview_days: 30

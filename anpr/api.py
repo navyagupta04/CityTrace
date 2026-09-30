@@ -217,6 +217,9 @@ def create_app(database: str | None = None, settings: Settings | None = None) ->
     video_public = Path(__file__).resolve().parent.parent / 'frontend' / 'dist' / 'videos'
     if video_public.is_dir():
         app.mount('/videos', StaticFiles(directory=video_public), name='demo-videos')
+    real_public = Path(__file__).resolve().parent.parent / 'frontend' / 'dist' / 'real'
+    if real_public.is_dir():
+        app.mount('/real', StaticFiles(directory=real_public), name='real-footage')
     register_frontend_api(app, platform, auth_service, settings)
     return app
 

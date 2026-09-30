@@ -1,0 +1,8 @@
+numpy==2.2.6
+scipy==1.14.1
+opencv-python==4.11.0.86
+onnxruntime>=1.20,<2
+supervision==0.25.1
+PyYAML>=6,<7
+imageio-ffmpeg>=0.6,<0.7
+# Optional plate stage: install pipeline/requirements-plates.txt and supply local weights.

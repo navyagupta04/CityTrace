@@ -1,4 +1,4 @@
-> **Current UI: Delhi mock-testing demo.** Open http://127.0.0.1:8000/?v=delhi-final#/trajectories and use the pre-filled demo sign-in. Test plate **DL01AB1234**. The app now includes 40 Delhi cameras, complete mock journeys, regional maps, heatmaps, attribute results and local traffic clips. See [the updated frontend guide](FRONTEND.md) for the test path, data provenance and source-file list. The Python backend documentation below remains available for independent backend testing.
+> **Current UI: Delhi synthetic-testing demo.** Open http://127.0.0.1:8000/?v=delhi-final#/trajectories and use the pre-filled demo sign-in. Test plate **DL01AB1234**. The app now includes 40 Delhi cameras, complete synthetic journeys, regional maps, heatmaps, attribute results and local traffic clips. See [the updated frontend guide](FRONTEND.md) for the test path, data provenance and source-file list. The Python backend documentation below remains available for independent backend testing.
 
 # CityTrace · City traffic intelligence
 
@@ -66,7 +66,7 @@ The simulator starts with synthetic OCR frames and bypasses neural inference. Re
 | `anpr/simulator.py`, `demo.py` | Synthetic generation, truth-only evaluation, scripted events, tamper test |
 | `anpr/models.py`, `api.py` | Validated API inputs, roles, REST, authenticated WebSocket |
 | `frontend/src`, `frontend/dist` | React + TypeScript source and bundled production UI served at `/` |
-| `anpr/auth.py`, `frontend_api.py`, `registry.py` | JWT sessions, reason-audited profile APIs, mock registry adapter |
+| `anpr/auth.py`, `frontend_api.py`, `registry.py` | JWT sessions, reason-audited profile APIs, synthetic registry adapter |
 | `anpr/static/index.html` | Preserved legacy single-file fallback |
 | `tools/process_video.py` | CPU video pipeline, local weights, optional annotated output, event spool |
 

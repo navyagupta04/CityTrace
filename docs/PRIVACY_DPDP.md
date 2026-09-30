@@ -1,0 +1,15 @@
+# Privacy and DPDP alignment workspace
+
+Aligned with the principles of the Digital Personal Data Protection Act, 2023. This is not legal certification; legal review is required before deployment.
+
+The admin `/privacy` workspace maps notice, purpose, minimisation, accuracy, retention, safeguards, accountability, rights and grievance handling to controls and marks each **Implemented in demo**, **Partial** or **Planned**. The legal-basis field is deliberately “To be determined with legal counsel”. The current [MeitY Act and Rules publication](https://www.meity.gov.in/documents/act-and-policies) must be reviewed by counsel for the intended operator, purpose and deployment date; this app does not determine applicability or statutory authority.
+
+Implemented locally: purpose/reference fields, session expiry, role-based UI masking, audit actions, abstention on uncertain plate reads, staged/source labels, no retained plate/face crops by default, configurable record expiry, HMAC linking option, bundle purge and in-memory access/correction/erasure request submission. Erasure removes matching real plate tracks, overlays, events, trajectories and registry entries from the current in-memory store. Correction/access requests remain pending operator review; no response or persistent fulfilment is fabricated.
+
+Default illustrative retention: 90 days for reads, 365 days for alert evidence, 30 days for published raw previews. Pipeline `purge-expired` removes expired exported rows and expired preview videos. Input footage and external backups require an operator policy; they are not silently deleted. Frontend purging resets on reload. Exported counts are anonymous aggregate model statistics. Expiry periods require legal and operational review.
+
+Viewer raw-video playback is blocked unless a generated redacted preview exists. `--blur-plates` uses full-frame downsampling as a conservative fallback, including possible undetected plates; it is not face detection. Temporary blind-labelling vehicle crops remain local and are removed on normal server exit. Processes forcibly killed by the operating system may require manual temporary-file cleanup.
+
+No production authentication or server-enforced access control for static `/real` files, encryption at rest, managed secret vault, immutable audit service, permanent rights-request processing, appointed grievance officer or legally validated surveillance authority is provided. Client-side masking is a UI control, not a security boundary. HMAC tokens supplement retained raw text and do not make the bundle anonymous. Do not publish raw recordings or unmasked plate JSON. Use owned or consented footage and account for third-party bystanders.
+
+Notice template: “Area under ANPR surveillance for traffic management and law enforcement.” Before actual use, identify the operator, purpose, applicable legal basis, data types, retention, rights procedure and grievance contact. The placeholder grievance contact must be replaced; a notice alone does not create legal authority.

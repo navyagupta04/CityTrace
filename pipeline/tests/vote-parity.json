@@ -1,0 +1,6 @@
+[
+ {"reads":[],"text":"","confidence":0},
+ {"reads":[{"text":"DL O1 AB 1234","confidence":0.9,"quality":1},{"text":"DL01AB1234","confidence":0.9,"quality":1}],"text":"DL01AB1234","confidence":0.9},
+ {"reads":[{"text":"22BH1234AB","confidence":0.8,"quality":0.5}],"text":"22BH1234AB","confidence":0.6},
+ {"reads":[{"text":"DL01AB1234","confidence":0.2,"quality":1}],"text":"DL01AB1234","confidence":0.2}
+]

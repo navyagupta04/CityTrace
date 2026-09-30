@@ -1,0 +1,11 @@
+clips:
+  - id: intel-cars
+    file: data/videos/car-detection.mp4
+    camera_id: C01
+    start_ist: '2026-09-30T09:00:00+05:30'
+    staged: true
+  - id: intel-street
+    file: data/videos/person-bicycle-car-detection.mp4
+    camera_id: C34
+    start_ist: '2026-09-30T09:03:00+05:30'
+    staged: true

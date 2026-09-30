@@ -1,0 +1,33 @@
+seed: 26127
+output: frontend/public/real
+cache: pipeline/.cache
+placements: configs/placements.yaml
+counting_lines: configs/counting_lines.yaml
+watchlist: configs/watchlist_demo.yaml
+privacy: configs/privacy.yaml
+ground_truth: data/ground_truth
+registry: data/demo_plate_registry.json
+detector:
+  name: OpenCV Zoo YOLOX
+  weights: pipeline/models/yolox.onnx
+  confidence: 0.35
+  nms: 0.5
+  input_size: 640
+  colour_order: RGB
+  device: cpu
+frame_stride: 3
+plate:
+  detector_weights: null
+  ocr_det_dir: null
+  ocr_rec_dir: null
+  min_plate_height_px: 25
+  vote_threshold: 0.8
+  top_k: 12
+  two_line_aspect_ratio: 2.0
+  retain_crops: false
+split:
+  seed: 26127
+  train: 0.6
+  dev: 0.2
+  test: 0.2
+clone_speed_limit_kmh: 110
