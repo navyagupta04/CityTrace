@@ -1,8 +1,9 @@
+import { clearOCRToken } from './real/LiveOCRRun/localSession';
 import type { Session } from './types';
 import { MOCK, mockApi } from './demo/api';
 
 let accessToken = '';
-export const setToken = (token: string) => { accessToken = token; };
+export const setToken = (token: string) => { accessToken = token; if(!token)clearOCRToken(); };
 export const getToken = () => accessToken;
 export class ApiError extends Error { constructor(message: string, public status: number) { super(message); } }
 

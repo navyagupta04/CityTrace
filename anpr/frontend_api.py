@@ -244,3 +244,5 @@ def register_frontend_api(app, platform, auth, settings):
         return {'processing_available': False, 'reason': 'Neural job service is not configured. Use the local video CLI with model weights, or import per-frame analysis JSON to inspect overlays.', 'recorded_only': True}
 
     app.include_router(router)
+    from .ocr_live import register_ocr_live
+    register_ocr_live(app, db, officer)

@@ -1,0 +1,24 @@
+engine: auto
+frame_stride: 15
+max_seconds: 60
+timeout_seconds: 900
+ttl_seconds: 1800
+max_files: 20
+max_jobs: 8
+image_mb: 10
+video_mb: 200
+max_pixels: 40000000
+plate:
+  detector_weights: null
+  ocr_det_dir: null
+  ocr_rec_dir: null
+  vote_threshold: 0.8
+  top_k: 12
+  two_line_aspect_ratio: 2.0
+  retain_crops: false
+detector:
+  name: OpenCV Zoo YOLOX
+  weights: pipeline/models/yolox.onnx
+  confidence: 0.35
+  nms: 0.5
+  device: cpu

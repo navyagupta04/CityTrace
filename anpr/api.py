@@ -32,10 +32,17 @@ def create_app(database: str | None = None, settings: Settings | None = None) ->
     @asynccontextmanager
     async def lifespan(app):
         yield
+        if hasattr(app.state, 'ocr_jobs'):
+            await asyncio.to_thread(app.state.ocr_jobs.close)
         platform.db.close()
 
     app = FastAPI(title='NEXUS · City Traffic Intelligence', version='1.0.0', lifespan=lifespan, docs_url=None, redoc_url=None)
     app.state.platform = platform
+    import os
+    from fastapi.middleware.cors import CORSMiddleware
+    origins = os.getenv('OCR_CORS_ORIGINS', 'http://127.0.0.1:5173,http://localhost:5173').split(',')
+    app.add_middleware(CORSMiddleware, allow_origins=origins, allow_credentials=True,
+                       allow_methods=['GET','POST','DELETE'], allow_headers=['Authorization','Content-Type'])
 
     def require(minimum):
         def dependency(x_role: str = Header(default='viewer'), x_api_key: str = Header(default=''), authorization: str = Header(default='')):

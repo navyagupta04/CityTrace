@@ -40,3 +40,9 @@ No crops are retained by default. `--blur-plates` produces a conservative whole-
 HMAC tokens are optional via `configs/privacy.yaml` and an environment secret. Tokens are supplemental; authorised raw plate text remains in the bundle, so this is not anonymisation. Purge applies to the exported bundle, not original user video files, backups or a production evidence store. The Privacy page's purge and erasure actions apply only to the in-memory real store and reset on reload.
 
 Roads are an offline OpenStreetMap vector extract. Routes respect represented one-way flags, but this is not a turn-restriction-aware navigation engine. Camera locations remain illustrative. Missing directed links use the existing schematic fallback.
+
+## Live OCR Lab (additive)
+
+`configs/lab.yaml` and `pipeline/engines/` support authenticated local uploads through the existing FastAPI app. Install `pipeline/requirements.txt`, start `python -m uvicorn anpr.api:app --host 127.0.0.1 --port 8000`, and open the OCR Lab. RapidOCR 1.4.4 / PP-OCRv4 is bundled by its wheel; `engine: auto` prefers configured Paddle directories, otherwise RapidOCR. Scene fallback uses text boxes and grammar, and videos vote within YOLOX/ByteTrack vehicle tracks. Labels never enter inference.
+
+See [OCR_LAB_LIVE.md](../docs/OCR_LAB_LIVE.md) for limits, authentication, metrics and privacy. Existing offline defaults, evaluation splits, test lock and `metrics.json` behaviour are unchanged. Upload results do not establish held-out accuracy. Browser OCR, fine-tuning, OCR ensembles and hardware camera telemetry remain unimplemented.

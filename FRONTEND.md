@@ -1,3 +1,11 @@
+# Current operations update · 1 October 2026
+
+The OCR Lab now includes a local authenticated upload/job panel above all existing panels. Camera Health Intelligence replaces the wall (`/wall` redirects), five supplied recordings play in Live Monitoring, and density analytics no longer has a footage tab. Compact provenance chips and Data sources distinguish modelled, sample, recorded, measured, and live-upload results.
+
+See [live OCR setup, limits, privacy and exact commands](docs/OCR_LAB_LIVE.md) and [changed files](docs/OCR_LAB_LIVE_FILES.md). The frontend still defaults to its existing in-memory access profile; the OCR panel can separately sign in to the local backend. OCR never runs in the browser. Five-stream playback metrics cannot supply network latency, camera hardware uptime or plate-read success without their source data, so those values remain unmeasured.
+
+The following historical implementation notes are retained for context; where they describe the old wall, footage analytics tab or preview-only OCR, this current update takes precedence.
+
 # CityTrace Delhi command console
 
 The current build is a **frontend-only React demo**. `VITE_USE_MOCK` defaults to `true`; the typed adapter resolves deterministic in-memory data with 180 ms simulated latency. No production authentication, registry connector or browser OCR is provided. A separate offline pipeline now exports real recorded-video detections. The existing Python implementation is retained separately below.
@@ -179,8 +187,8 @@ The CLI uses confidence ≥0.4, EMA box smoothing, and excludes tiny boxes / tra
 
 This change implements the **React frontend**, plus API adapters needed by its supported screens. The expanded product brief also describes services that are not installed or configured. The UI does not fake their results:
 
-- No server-side video upload/job queue or processing service. The new offline pipeline provides recorded-clip counting lines, track dwell, hashes and static JSON overlays; it does not provide live city surveillance.
-- No image-to-text model running inside OCR Lab; its image control previews only. Voting and format validation operate on supplied OCR reads.
+- The local authenticated OCR upload/job service now exists. The retained offline pipeline provides recorded-clip counting lines, track dwell, hashes and static JSON overlays; it does not provide live city surveillance.
+- OCR Lab now runs RapidOCR on the local service. Browser-side OCR remains unimplemented. The separate legacy crop control remains preview-only, and its voting playground still accepts supplied reads.
 - No official registry/e-Challan connectivity, satellite tile provider, geofence polygons or hardware camera heartbeat service. Registry data is explicitly synthetic in demo mode.
 - No trained colour/make/model classifier, appearance embeddings, cross-camera appearance re-identification or saved-search alert service. Demo colour is deterministic synthetic metadata, not a prediction. Attribute confidence is not substituted with a made-up value.
 - No week-on-week delta without historical data. KPI notes explicitly state the retained-data scope.

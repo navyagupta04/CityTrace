@@ -4,6 +4,13 @@ from ..common import ROOT
 def split_lines(crop,aspect_ratio=2):
     return [crop[:crop.shape[0]//2],crop[crop.shape[0]//2:]] if crop.shape[1]/crop.shape[0]<aspect_ratio else [crop]
 
+def prepare_piece(piece):
+    """Shared CLAHE/upscale preprocessing for offline and live adapters."""
+    import cv2
+    gray=cv2.cvtColor(piece,cv2.COLOR_BGR2GRAY);gray=cv2.createCLAHE(2,(8,8)).apply(gray)
+    scale=max(1,48/gray.shape[0]);prepared=cv2.resize(gray,None,fx=scale,fy=scale,interpolation=cv2.INTER_CUBIC)
+    return cv2.cvtColor(prepared,cv2.COLOR_GRAY2BGR)
+
 def read_plates(clip,analysis,tracks,cfg):
     settings=cfg['plate']
     if not all(settings.get(k) for k in ('detector_weights','ocr_det_dir','ocr_rec_dir')):
@@ -37,9 +44,7 @@ def read_plates(clip,analysis,tracks,cfg):
             pieces=split_lines(crop,settings['two_line_aspect_ratio'])
             text='';conf=[]
             for piece in pieces:
-                gray=cv2.cvtColor(piece,cv2.COLOR_BGR2GRAY);gray=cv2.createCLAHE(2,(8,8)).apply(gray)
-                scale=max(1,48/gray.shape[0]);prepared=cv2.resize(gray,None,fx=scale,fy=scale,interpolation=cv2.INTER_CUBIC)
-                result=engine.ocr(cv2.cvtColor(prepared,cv2.COLOR_GRAY2BGR),cls=False)
+                result=engine.ocr(prepare_piece(piece),cls=False)
                 for line in (result[0] or []) if result else []:text+=line[1][0];conf.append(float(line[1][1]))
             certainty=sum(conf)/len(conf) if conf else 0
             f.update(ocr=text,ocr_conf=certainty,quality=quality)
