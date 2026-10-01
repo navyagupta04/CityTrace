@@ -9,6 +9,8 @@ class Read:
     text: str
     confidence: float
     quality: float = 1.0
+    characters: tuple = ()
+    detection_confidence: float | None = None
 
 
 def vote(reads: list[Read]) -> tuple[str, float]:

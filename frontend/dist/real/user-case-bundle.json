@@ -75,6 +75,44 @@
         "ocr_engine": "RapidOCR 1.4.4 / PP-OCRv4",
         "retention_basis": "User explicitly requested plate crops for these two clips."
       }
+    },
+    {
+      "source": "real",
+      "expires_at": "2026-10-31T23:59:59+05:30",
+      "id": "user-vehicle-c",
+      "video": "user/user-vehicle-c.mp4",
+      "fps": 24.0,
+      "width": 1280,
+      "height": 720,
+      "duration_s": 10.0,
+      "sha256": "2c48e1c3e4a3c232ff691d758505a91dfb25e492f8d9a31e021fa4593518dc58",
+      "camera_id": "C34",
+      "start_ist": "2026-10-01T09:06:00+05:30",
+      "staged": true,
+      "generated": true,
+      "evidence": {
+        "plate": "AI07204",
+        "display_plate": "AI 0720-4",
+        "identity_source": "user_confirmed",
+        "vehicle_label": "New daylight dark sedan",
+        "colour": "Dark grey / black",
+        "vehicle_class": "sedan",
+        "make": "Not verified",
+        "appearance_source": "manual_review",
+        "frame": 136,
+        "time_s": 5.666666666666667,
+        "roi": [
+          492,
+          382,
+          618,
+          439
+        ],
+        "original_filename": "gemini_generated_video_bdab81d9.mp4",
+        "ocr_text": "OA0720",
+        "ocr_confidence": 0.8202883948882421,
+        "ocr_engine": "RapidOCR 1.4.4 / PP-OCRv4",
+        "retention_basis": "Source video retained for the requested comparison; no new crop or poster stored."
+      }
     }
   ],
   "analysis": {
@@ -91,11 +129,19 @@
       "fps": 24.0,
       "frame_stride": 1,
       "frames": []
+    },
+    "user-vehicle-c": {
+      "source": "real",
+      "expires_at": "2026-10-31T23:59:59+05:30",
+      "fps": 24.0,
+      "frame_stride": 1,
+      "frames": []
     }
   },
   "tracks": {
     "user-vehicle-a": [],
-    "user-vehicle-b": []
+    "user-vehicle-b": [],
+    "user-vehicle-c": []
   },
   "counts": {
     "user-vehicle-a": {
@@ -114,6 +160,21 @@
       }
     },
     "user-vehicle-b": {
+      "source": "real",
+      "expires_at": "2026-10-31T23:59:59+05:30",
+      "lines": [],
+      "crossings": [],
+      "totals": {},
+      "direction_totals": {},
+      "unique_tracks": 0,
+      "track_classes": {},
+      "dwell": {
+        "mean_s": null,
+        "median_s": null,
+        "values_s": []
+      }
+    },
+    "user-vehicle-c": {
       "source": "real",
       "expires_at": "2026-10-31T23:59:59+05:30",
       "lines": [],
@@ -160,22 +221,48 @@
         {
           "source": "real",
           "expires_at": "2026-10-31T23:59:59+05:30",
-          "clip_id": "user-vehicle-b",
+          "clip_id": "user-vehicle-c",
           "camera_id": "C34",
-          "ts_ist": "2026-10-01T09:03:00+05:30",
-          "video_time_s": 5.625,
+          "ts_ist": "2026-10-01T09:06:00+05:30",
+          "video_time_s": 5.666666666666667,
           "track_id": 1,
           "confidence": 0,
           "staged": true,
           "identity_source": "user_confirmed"
         }
       ],
-      "explanation": "Two visibly different vehicles share the user-confirmed plate AI 0720-4: a blue van and a dark sedan. Review both source recordings and crops. This is a suspected duplicate-plate test case, not a verified crime. Delhi camera locations and capture times are staged; original recording provenance is unverified.",
+      "explanation": "Suspected plate cloning: the existing blue van and the new dark sedan are linked to the same registration by your confirmation, but have different body structures and colours. Compare the two source videos at their reviewed sighting times. The raw OCR differs from the confirmed identity, so this is a review alert, not an automatic exact-plate match.",
       "factors": [
         {
-          "label": "Same user-confirmed plate on two different vehicle appearances",
+          "label": "Same user-confirmed registration with different vehicle bodies",
           "points": 0
         }
+      ],
+      "basis": "appearance_mismatch",
+      "generated": true,
+      "review_reasons": [
+        {
+          "code": "same_confirmed_plate",
+          "label": "Same user-confirmed registration",
+          "detail": "You identified both recordings as carrying the same plate. This links the evidence for review; it is not an independent OCR agreement."
+        },
+        {
+          "code": "body_mismatch",
+          "label": "Different vehicle body structure",
+          "detail": "The existing vehicle is a tall, box-shaped blue van with a short bonnet and upright cabin. The new vehicle is a low four-door sedan with a long bonnet and a separate rear boot. Lighting cannot explain this structural difference."
+        },
+        {
+          "code": "colour_mismatch",
+          "label": "Different visible body colour",
+          "detail": "The existing vehicle is bright blue; the new sedan appears dark grey or black. Colour supports the body mismatch, but lighting and repainting can affect colour and it is not sufficient alone."
+        }
+      ],
+      "limitations": [
+        "Appearance descriptions are manually reviewed observations, not classifier measurements.",
+        "Raw OCR disagrees with the user-confirmed plate in both clips. Check the source frames before verifying the alert; the engine score is not cloning probability.",
+        "The new recording is generated test footage. Its plate characters and on-screen clock may vary; these overlays do not establish a capture time or real camera identity.",
+        "Delhi camera assignments and times are staged. No impossible-travel claim or continuous journey between these vehicles is used to trigger this alert.",
+        "No registry or ownership record establishes which vehicle is legitimate. The case remains suspected until a reviewer verifies the identities."
       ]
     },
     {
@@ -248,6 +335,18 @@
           "camera_id": "C34",
           "ts_ist": "2026-10-01T09:03:00+05:30",
           "video_time_s": 5.625,
+          "track_id": 1,
+          "confidence": 0,
+          "staged": true,
+          "identity_source": "user_confirmed"
+        },
+        {
+          "source": "real",
+          "expires_at": "2026-10-31T23:59:59+05:30",
+          "clip_id": "user-vehicle-c",
+          "camera_id": "C34",
+          "ts_ist": "2026-10-01T09:06:00+05:30",
+          "video_time_s": 5.666666666666667,
           "track_id": 1,
           "confidence": 0,
           "staged": true,

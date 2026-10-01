@@ -1,0 +1,13 @@
+import {percent} from './AccuracyPanel';
+import type {FileResult,PlateResult} from './ocrLiveApi';
+export function CharacterScores({plate}:{plate:PlateResult}){
+ const chars=plate.character_confidences||[],threshold=plate.confidence_threshold??.8;
+ return chars.length?<><small>Raw OCR character scores</small><div className="ocr-character-scores" aria-label="Per-character OCR confidence">{chars.map((c,i)=><span key={i} className={c.confidence<threshold?'low-character':''} title={`${c.character}: ${percent(c.confidence)}`}><strong>{c.character===' '?'␣':c.character}</strong><small>{percent(c.confidence)}</small></span>)}</div></>:<small>Character scores unavailable from this engine.</small>;
+}
+export function DetectionConfidence({plate}:{plate:PlateResult}){
+ return <>{percent(plate.plate_detection_confidence)}<small>{plate.detection_confidence_source==='ppocr_text_region'?'PP-OCR text-region detector':plate.detection_confidence_source==='plate_detector'?'Plate detector':'Detector score not exposed / supplied crop'}</small></>;
+}
+export default function ConfidenceDetails({file}:{file:FileResult}){
+ const plates=[...file.plates,...file.tracks].filter(p=>p.raw||p.box);
+ return <section className="ocr-confidence-details"><h3>{file.file} · Per-detection confidence</h3><p>OCR and detector scores describe each detection, not overall system accuracy. Low-confidence warning threshold: {percent(plates[0]?.confidence_threshold??.8)}.</p>{file.annotated_image&&<img className="ocr-annotated-image" src={file.annotated_image} alt={`Annotated plate detections in ${file.file}`}/>}{!plates.length?<p role="status" className="ocr-no-plate">No plate found in this upload. Try a clearer, closer image or a plate crop.</p>:<div className="ocr-detection-cards">{plates.map((p,i)=><article key={p.track_id??i}><h3>{p.voted||p.normalised||p.raw}{p.track_id!=null&&` · track ${p.track_id}`}</h3>{p.crop_image&&<img className="ocr-plate-crop" src={p.crop_image} alt={`Source plate crop ${i+1} in ${file.file}`}/>}<dl><dt>OCR confidence</dt><dd>{percent(p.ocr_confidence)}</dd><dt>Plate detection confidence</dt><dd><DetectionConfidence plate={p}/></dd><dt>Processing time</dt><dd>{file.duration_ms?.toFixed(0)} ms</dd></dl>{(p.low_confidence??p.ocr_confidence<(p.confidence_threshold??.8))&&<p className="ocr-confidence-warning" role="status">Low OCR confidence · check the source plate before accepting this read.</p>}{p.plate_detection_confidence!=null&&p.plate_detection_confidence<(p.confidence_threshold??.8)&&<p className="ocr-confidence-warning">Low detector confidence · inspect the plate box.</p>}<CharacterScores plate={p}/></article>)}</div>}</section>;
+}

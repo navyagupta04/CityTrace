@@ -14,4 +14,5 @@ class ErrorBoundary extends Component<{children:ReactNode},{failed:boolean}> {
   render(){return this.state.failed?<div className="boot-screen"><h1>Workspace could not be displayed</h1><p>Please reload to reconnect. Your evidence is retained on the server.</p><button onClick={()=>location.reload()}>Reload workspace</button></div>:this.props.children;}
 }
 document.documentElement.dataset.theme='light';
+import './gis.css';
 ReactDOM.createRoot(document.getElementById('root')!).render(<React.StrictMode><ErrorBoundary><SessionProvider><HashRouter><App/></HashRouter></SessionProvider></ErrorBoundary></React.StrictMode>);

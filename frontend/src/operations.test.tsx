@@ -15,7 +15,9 @@ import type { OCRJob } from './real/LiveOCRRun/ocrLiveApi';
 import { ocrRequest } from './real/LiveOCRRun/ocrLiveApi';
 import LiveFeeds from './real/LiveFeeds';
 import { liveFeeds } from './real/liveFeeds.config';
-import NetworkMap,{project} from './components/NetworkMap';
+import NetworkMap,{project,SchematicMap,type NetworkMapProps} from './components/NetworkMap';
+// Leaflet rendering is verified in the browser; DOM tests exercise the cached fallback.
+vi.mock('./components/StreetMap',()=>({default:(props:NetworkMapProps)=><SchematicMap {...props}/>}));
 import { HashRouter } from './router';
 import { cameras,roads,reads,initialAlerts,densityAt } from './demo/model';
 import Overview from './pages/Overview';
@@ -45,6 +47,12 @@ const click=async(text:string)=>{const button=[...host.querySelectorAll('button'
 const fixture:OCRJob={job_id:'fixture',state:'done',stage:'complete',progress:100,engine:'Fixture',engine_version:'test only',device:'CPU',duration_ms:20,purged:true,files:[{file:'fixture.png',sha256:'test',type:'image',mode_used:'crop',duration_ms:20,status:'read',tracks:[],plates:[{track_id:null,box:null,raw:'DLO1AB1234',normalised:'DL01AB1234',voted:'DL01AB1234',format_valid:true,format:'standard',ocr_confidence:.9,vote_confidence:.85,n_reads:1,status:'read',expected:'DL01AB1234',exact_match:true,cer:0},{track_id:2,box:null,raw:'',normalised:'',voted:null,format_valid:false,format:'unknown',ocr_confidence:0,vote_confidence:0,n_reads:0,status:'abstain'}]}],metrics:{n_scored:1,blind:true,verdict:'Inconclusive: too few labelled samples (N = 1)',plate_accuracy_all:{value:1,n:1,correct:1,ci95:[.2065,1]},cer:0,coverage:1,selective_accuracy:{value:1,n:1,correct:1,ci95:[.2065,1]},coverage_curve:[],reliability:[],error_cases:[]}};
 
 describe('live OCR UI and health',()=>{
+ it('adds actual detection and character confidences to video rows and masks character exports',async()=>{
+  const value={...fixture,files:fixture.files.map(f=>({...f,type:'video',plates:[],tracks:[{...f.plates[0],ocr_confidence:.73,plate_detection_confidence:.67,character_confidences:[{character:'O',confidence:.42}],confidence_threshold:.8,detection_confidence_source:'ppocr_text_region'}]}))};
+  await render(<ResultTable job={value} uploads={[]} labels={{}} onLabel={()=>{}}/>);
+  expect(host.textContent).toContain('73.0%');expect(host.textContent).toContain('67.0%');expect(host.textContent).toContain('42.0%');expect(host.textContent).toContain('Low confidence');expect(host.querySelector('.low-character')?.textContent).toContain('O');
+  expect(exportJob(value,false).files[0].tracks[0].character_confidences).toEqual([]);
+ });
  it('computes health by documented weights and never fills missing measurements',()=>{const ideal={signal:true,fps:25,latency:0,brightness:128,sharpness:250,readRate:1};expect(cameraHealth(ideal).total).toBe(100);expect(cameraHealth({...ideal,signal:false}).status).toBe('Offline');const half=cameraHealth({signal:true,fps:12.5,latency:500,brightness:64,sharpness:125,readRate:.5});expect(half.total).toBe(65);expect(half.status).toBe('Degraded');expect(cameraHealth({...ideal,readRate:null}).total).toBeNull();});
  it('shows unavailable without fabricated results when backend is down',async()=>{await render(<LiveOCRRun/>);expect(host.textContent).toContain('Unavailable');expect(host.textContent).toContain('Backend unreachable');expect(host.querySelector('table')).toBeNull();expect([...host.querySelectorAll('button')].find(b=>b.textContent==='Run OCR pipeline')?.disabled).toBe(true);});
  it('renders mixed read and abstain rows',async()=>{await render(<ResultTable job={fixture} uploads={[]} labels={{}} onLabel={()=>{}}/>);expect(host.textContent).toContain('DL01AB1234');expect(host.textContent).toContain('abstain');expect(host.textContent).toContain('Not scored');});
@@ -71,8 +79,9 @@ describe('live OCR UI and health',()=>{
   expect(host.textContent).toContain('fixture.png: OCR');expect(host.querySelector('progress')?.value).toBe(42);
   await act(async()=>{await new Promise(resolve=>setTimeout(resolve,800));});
   expect(host.textContent).toContain('done');
-  await click('Save labels and recompute (not blind)');
-  expect(host.textContent).toContain('Labels entered after viewing results, not blind');
+  expect(host.textContent).toContain('OCR confidence');
+  expect(host.textContent).toContain('Plate detection confidence');
+  expect(host.querySelector('.accuracy-step')).toBeNull();
  });
  it('focuses the existing map on a camera and allows reset',async()=>{await render(<NetworkMap cameras={cameras} roads={roads} focusCamera="C02"/>);const [x,y]=project(cameras[1].lon,cameras[1].lat);const view=host.querySelector('svg')!.getAttribute('viewBox')!.split(' ').map(Number);expect(view[0]+view[2]/2).toBeCloseTo(x);expect(view[1]+view[3]/2).toBeCloseTo(y);expect(view[2]).toBeLessThan(840);await act(async()=>host.querySelector<HTMLButtonElement>('[aria-label="Reset map view"]')!.click());expect(host.querySelector('svg')!.getAttribute('viewBox')).toBe('0 0 840 900');});
  it('preserves Locate focus when the parent resets an earlier region, then allows manual region control',async()=>{await render(<NetworkMap cameras={cameras} roads={roads} focusCamera="C02" region="South Delhi"/>);await render(<NetworkMap cameras={cameras} roads={roads} focusCamera="C02" region="All Delhi"/>);const [x,y]=project(cameras[1].lon,cameras[1].lat),view=host.querySelector('svg')!.getAttribute('viewBox')!.split(' ').map(Number);expect(view[0]+view[2]/2).toBeCloseTo(x);expect(view[1]+view[3]/2).toBeCloseTo(y);const select=host.querySelector<HTMLSelectElement>('[aria-label="Map region"]')!;await act(async()=>{select.value='South Delhi';select.dispatchEvent(new Event('change',{bubbles:true}));});await render(<NetworkMap cameras={cameras} roads={roads} focusCamera="C02" region="South Delhi"/>);expect(host.querySelector('.camera-selected')).toBeNull();});
@@ -87,11 +96,12 @@ describe('plain OCR and two-clip live cases',()=>{
  function urls(){vi.stubGlobal('URL',Object.assign(URL,{createObjectURL:()=> 'blob:case',revokeObjectURL:vi.fn()}));}
  it('runs without labels or CSV and has no scoring request or verdict',async()=>{
   urls();vi.mocked(ocrRequest).mockImplementation(async(path,body)=>{if(path==='status')return {available:true,engine:'Fixture',device:'CPU'};if(path==='jobs'){expect(body).toBeInstanceOf(FormData);expect((body as FormData).has('expected')).toBe(false);expect((body as FormData).has('blind')).toBe(false);return {job_id:'plain'};}return unscored;});
-  await render(<LiveOCRRun/>);expect(host.querySelector<HTMLDetailsElement>('.accuracy-step')?.open).toBe(false);
+  await render(<LiveOCRRun/>);expect(host.querySelector('.accuracy-step')).toBeNull();
   const input=host.querySelector<HTMLInputElement>('input[type=file]')!;Object.defineProperty(input,'files',{value:[new File(['fixture'],'fixture.png',{type:'image/png'})]});await act(async()=>input.dispatchEvent(new Event('change',{bubbles:true})));await setValue(purpose(),'Test plain OCR');
   expect([...host.querySelectorAll('button')].find(b=>b.textContent==='Run OCR pipeline')!.disabled).toBe(false);await click('Run OCR pipeline');
   expect(host.textContent).toContain('Not scored. Add expected plates to measure accuracy.');expect([...host.querySelectorAll('th')].map(n=>n.textContent)).not.toContain('Match / CER');expect(host.textContent).not.toContain('Inconclusive:');
-  await click('Measure accuracy');expect(host.querySelector<HTMLDetailsElement>('.accuracy-step')?.open).toBe(true);
+  expect(host.textContent).not.toContain('Step 2 · Measure accuracy');
+  expect(host.textContent).not.toContain('Import labels CSV');
  });
  it.each([2,3])('loads exactly %i configured files with no expected labels by default',async count=>{
   urls();const places=Array.from({length:count},(_,i)=>({file:`cam-${i}.mp4`,url:`/videos/test-case/cam-${i}.mp4`,camera_id:i?'C05':'C01',start_ist:`10:1${i}:05`,sha256:'fixture'}));
@@ -100,9 +110,9 @@ describe('plain OCR and two-clip live cases',()=>{
   await render(<LiveOCRRun/>);await click('Load test case');expect(host.querySelectorAll('.upload-cards video')).toHaveLength(count);expect(fetcher.mock.calls.filter(([p])=>p.endsWith('.mp4'))).toHaveLength(count);
   for(const input of host.querySelectorAll<HTMLInputElement>('[aria-label^="Expected plate"]'))expect(input.value).toBe('');
  });
- it('sends blind true only with labels entered before a run',async()=>{
-  urls();vi.mocked(ocrRequest).mockImplementation(async(path,body)=>{if(path==='status')return {available:true,engine:'fixture'};if(path==='jobs'){expect((body as FormData).get('blind')).toBe('true');expect(JSON.parse((body as FormData).get('expected') as string)).toEqual({'fixture.png':'DL04CT7391'});return {job_id:'labelled'};}return fixture;});
-  await render(<LiveOCRRun/>);const input=host.querySelector<HTMLInputElement>('input[type=file]')!;Object.defineProperty(input,'files',{value:[new File(['fixture'],'fixture.png',{type:'image/png'})]});await act(async()=>input.dispatchEvent(new Event('change',{bubbles:true})));await setValue(purpose(),'Blind fixture check');await setValue(host.querySelector<HTMLInputElement>('[aria-label="Expected plate fixture.png"]')!,'DL04CT7391');await click('Run OCR pipeline');expect(host.textContent).toContain('Blind: labels entered before this run');
+ it('removes the requested accuracy-input section without removing the upload workflow',async()=>{
+  urls();vi.mocked(ocrRequest).mockImplementation(async path=>path==='status'?{available:true,engine:'fixture'}:fixture);
+  await render(<LiveOCRRun/>);expect(host.textContent).toContain('Step 1 · Upload and run');expect(host.querySelector('.accuracy-step')).toBeNull();expect(host.querySelector('[aria-label^="Expected plate"]')).toBeNull();expect(host.textContent).not.toContain('Import labels CSV');
  });
  const testCase:LiveCase={id:'case-test',plate:'DL04CT7391',purpose:'Case fixture test',generated:true,staged:true,total_distance_km:1.719,geojson:{type:'LineString',coordinates:[[77.217,28.631],[77.218,28.643]]},stops:[0,1].map(i=>({clip:`cam-${i}.mp4`,sha256:'a'.repeat(64),camera_id:i?'C05':'C01',camera:cameras[i?4:0],ts_ist:`2026-09-30T10:${i?'15:02':'12:05'}+05:30`,video_time_s:1.5,vote_confidence:.93,staged:true,generated:true,track_id:1,evidence:{...fixture.files[0].plates[0],voted:'DL04CT7391',track_id:1,time_s:2},observed_span_s:3,leg_distance_km:i?1.719:0,seconds:i?177:null,speed_kmh:i?35:null,inferred_cameras:[],implausible:false}))};
  it('creates a placed case and adds its preset without changing existing presets',async()=>{

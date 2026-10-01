@@ -1,3 +1,5 @@
+import {lazy,Suspense} from 'react';
+const StreetMap=lazy(()=>import('./StreetMap'));
 import { RoadLayer,useRoads } from '../real/RoadLayer';
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { LocateFixed, Minus, Plus } from 'lucide-react';
@@ -6,13 +8,13 @@ import boundary from '../demo/delhi-boundary.json';
 import { REGIONS } from '../constants/city';
 import { cameraById } from '../demo/model';
 
-interface Props {focusCamera?:string;statusColors?:boolean;cameras:Camera[];roads:Road[];corridors?:Corridor[];density?:Density[];trajectory?:Trajectory|null;compare?:Trajectory|null;progress?:number;onCamera?:(camera:Camera)=>void;large?:boolean;region?:string;onRegion?:(region:string)=>void;heat?:boolean;flows?:{from:string;to:string;count:number}[]}
+export interface NetworkMapProps {densityPeriod?:{start:string;end:string};focusCamera?:string;statusColors?:boolean;cameras:Camera[];roads:Road[];corridors?:Corridor[];density?:Density[];trajectory?:Trajectory|null;compare?:Trajectory|null;progress?:number;onCamera?:(camera:Camera)=>void;large?:boolean;region?:string;onRegion?:(region:string)=>void;heat?:boolean;flows?:{from:string;to:string;count:number}[]}
 const EMPTY:never[]=[];
 export const project=(lon:number,lat:number):[number,number]=>[(lon-76.83)*1550,(28.90-lat)*1770];
 const shape=boundary.features[0].geometry.coordinates as number[][][];
 const boundaryPath=shape.map(ring=>ring.map(([lon,lat],i)=>`${i?'L':'M'}${project(lon,lat).map(v=>v.toFixed(1)).join(',')}`).join(' ')+'Z').join(' ');
 const river=[[77.22,28.86],[77.215,28.79],[77.23,28.74],[77.232,28.69],[77.255,28.65],[77.253,28.61],[77.285,28.56],[77.308,28.51],[77.325,28.44]].map(([lon,lat])=>project(lon,lat).join(',')).join(' ');
-export default function NetworkMap({cameras,roads,corridors=EMPTY,density=EMPTY,trajectory,compare,progress=1,onCamera,focusCamera,statusColors=false,large=false,region:controlled,onRegion,heat=false,flows=EMPTY}:Props){
+export function SchematicMap({cameras,roads,corridors=EMPTY,density=EMPTY,trajectory,compare,progress=1,onCamera,focusCamera,statusColors=false,large=false,region:controlled,onRegion,heat=false,flows=EMPTY}:NetworkMapProps){
  const realRoads=useRoads(),[realMode,setRealMode]=useState(true);
  const [localRegion,setLocalRegion]=useState('All Delhi'),[showHeat,setShowHeat]=useState(heat),[selected,setSelected]=useState<Camera|null>(null),[zoom,setZoom]=useState(1),[pan,setPan]=useState<[number,number]>([0,0]);
  const drag=useRef<{x:number;y:number;pan:[number,number]}|null>(null),uid=useId().replace(/:/g,''),region=controlled??localRegion;
@@ -50,3 +52,5 @@ export default function NetworkMap({cameras,roads,corridors=EMPTY,density=EMPTY,
   <a className="map-attribution" href="https://github.com/datameet/Municipal_Spatial_Data/tree/master/Delhi" target="_blank" rel="noreferrer">{realMode&&realRoads?'Road data © OpenStreetMap contributors (ODbL) · Boundary: DataMeet · cameras illustrative':'Boundary: DataMeet / CC BY-SA 2.5 IN · roads & regions illustrative'}</a>
  </div>;
 }
+
+export default function NetworkMap(props:NetworkMapProps){const [cached,setCached]=useState(false);return <div><div className="map-mode"><button aria-pressed={!cached} onClick={()=>setCached(false)}>Geographic map</button><button aria-pressed={cached} onClick={()=>setCached(true)}>Cached schematic</button></div>{cached?<SchematicMap {...props}/>:<Suspense fallback={<SchematicMap {...props}/>}><StreetMap {...props}/></Suspense>}</div>;}

@@ -227,6 +227,8 @@ def create_app(database: str | None = None, settings: Settings | None = None) ->
     real_public = Path(__file__).resolve().parent.parent / 'frontend' / 'dist' / 'real'
     if real_public.is_dir():
         app.mount('/real', StaticFiles(directory=real_public), name='real-footage')
+    from .gis import register_gis
+    register_gis(app)
     register_frontend_api(app, platform, auth_service, settings)
     return app
 

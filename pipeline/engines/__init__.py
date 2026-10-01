@@ -28,6 +28,29 @@ class RapidEngine:
         return [{'text': text, 'confidence': float(conf), 'box': box, 'lines': [text]}
                 for box, text, conf in (result or [])]
 
+    def read_detailed(self, image):
+        """Expose PP-OCRv4 DB detector scores and decoded CTC character scores."""
+        import numpy as np
+        detector = self.engine.text_det
+        prepared = detector.get_preprocess(max(image.shape[:2]))(image)
+        if prepared is None:
+            return []
+        predictions = detector.infer(prepared)[0]
+        boxes, scores = detector.postprocess_op(predictions, image.shape[:2])
+        rows = []
+        for box, score in zip(boxes, scores):
+            valid = detector.filter_tag_det_res(np.asarray([box]), image.shape[:2])
+            if not len(valid):
+                continue
+            crops = self.engine.get_crop_img_list(image, valid)
+            recognised, _ = self.engine.text_rec(crops, return_word_box=True)
+            text, confidence, detail = recognised[0]
+            chars = [{'character': char, 'confidence': float(prob)}
+                     for char, prob in zip(text, detail[-1])]
+            rows.append(dict(text=text, confidence=float(confidence), box=valid[0].tolist(),
+                             characters=chars, detection_confidence=float(score), lines=[text]))
+        return rows
+
 
 class PaddleEngine:
     name = 'PaddleOCR'

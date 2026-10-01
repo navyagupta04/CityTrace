@@ -25,3 +25,21 @@ Live dependency pins: RapidOCR-onnxruntime **1.4.4** and bundled PP-OCRv4 ONNX w
 Supplied sources: `16516296_1920_1080_25fps.mp4`, `6187935-uhd_3840_2160_30fps.mp4`, `gettyimages-1454295894-640_adpp.mp4`, `gettyimages-538808549-640_adpp.mp4`, `gettyimages-680128580-640_adpp.mp4`. Local copies in `frontend/public/videos/live/` are prepared for browser playback. Source and prepared-file SHA-256 values are in `frontend/src/real/liveFeeds.config.ts`. The user supplied these files for local use; filenames and watermarks do not grant redistribution rights. No public publication was performed. C01–C05 assignments are staged and do not identify where the recordings were made.
 
 Live uploads are transient and are not added to these public feed assets. Rendered PIL plate fixtures are software tests, not accuracy evidence. No new held-out benchmark result is claimed.
+
+## Updated cloning comparison · 1 October 2026
+
+The requested suspect case now compares the existing daylight blue van (`user-vehicle-a`, `vehicle.mp4`) with `gemini_generated_video_bdab81d9.mp4` (`user-vehicle-c`). The older night sedan remains available with its existing test watchlist event and sighting. The alert itself links exactly the blue van and the new sedan.
+
+The reason is the same **user-confirmed** registration `AI 0720-4` on different vehicle appearances: a tall, box-shaped bright blue van versus a low dark grey/black sedan with a separate boot. Body structure is the primary appearance difference; colour is supporting evidence and can change with lighting or repainting. These descriptions come from manual review, not an automated vehicle classifier. This is a suspected test case requiring human review; it does not establish which registration is legitimate.
+
+The new file is copied unchanged and flagged **Generated test footage**. At frame 136 (5.6667 seconds), RapidOCR reads `OA0720`, engine score 0.8202884, from the manually selected pixel ROI `[492,382,618,439]`. That output is retained unchanged beside the user's confirmed registration. It does not match the confirmed plate. No new plate crop or poster is stored. File SHA-256: `2c48e1c3e4a3c232ff691d758505a91dfb25e492f8d9a31e021fa4593518dc58`.
+
+C34 and 09:06 IST are staged UI assignments. The generated on-screen clock and camera text are unverified; neither is used as factual capture metadata. The clone alert uses appearance differences, with no impossible-travel arithmetic. Existing evaluation metrics and two test watchlist matches are preserved. Retention follows the existing 31 October 2026 expiry.
+
+Reproduce the additive update after the original case exists:
+
+```powershell
+.venv/Scripts/python.exe -m tools.add_clone_video 'C:\Users\Navya gupta\OneDrive\Desktop\videos\gemini_generated_video_bdab81d9.mp4'
+```
+
+Open **Alerts → Video evidence cases → Suspected cloned plate · AI 0720-4 → Review both vehicles**. Check the reason list, comparison table, unmodified OCR, generated/staged chips, source hashes and both source videos at 2.8907 / 5.6667 seconds. Viewer text is masked and raw video/crops stay restricted. The original `tools/build_user_case.py` rebuilds the original pair; rerun the additive command above afterward to restore this updated pairing.
