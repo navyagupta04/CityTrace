@@ -131,3 +131,62 @@ The rendered PIL plate test is a **test fixture, not accuracy evidence**. Actual
 - The optional Paddle adapter was not runtime-tested. Five feed analysis JSONs were not supplied, so detection overlays and plate-read telemetry remain unavailable for those recordings. Network latency and packet loss cannot be measured from local MP4 playback.
 
 The existing offline OCR preprocessing was extracted into `prepare_piece` and reused by the live path; its CLAHE/upscaling algorithm and offline defaults remain unchanged. The original uploaded Desktop source files are unchanged. The complete source, prepared media and generated distribution change list is in [OCR_LAB_LIVE_FILES.md](OCR_LAB_LIVE_FILES.md).
+
+
+## Plain OCR and the two supplied test clips — update
+
+The current request supplies **two** 10-second, 1280×720 clips. The test case uses exactly these two, in filename order, rather than duplicating footage to create a third stop. Their bytes are copied unchanged into `frontend/public/videos/test-case/`; the Desktop originals remain unchanged. Both are labelled **Generated test footage** and **Staged placement**. The earlier five-feed monitoring grid and all prior trajectory presets remain intact.
+
+Step 1 is **Upload and run**, with **No labels needed.** Pick files, enter a purpose of at least five characters and run when the local engine is ready. Step 2 is a collapsed **Measure accuracy (optional)** accordion containing expected plates and the CSV importer. With no entered labels the request omits both `expected` and `blind`. The response has `scored: false`, per-row `scored: false`, and `metrics: {scored: false}` with no verdict. Expected/Match/CER columns remain hidden. Summary cards and actual OCR results still appear. **Measure accuracy** opens Step 2; saving post-run labels recomputes metrics as non-blind.
+
+### Prepare camera placements
+
+From `D:\127`:
+
+```powershell
+.\.venv\Scripts\python.exe -m scripts.choose_test_cameras
+```
+
+To import the original two files into a fresh checkout first:
+
+```powershell
+.\.venv\Scripts\python.exe -m scripts.choose_test_cameras "C:\Users\Navya gupta\OneDrive\Desktop\gemini_generated_video_4835b244.mp4" "C:\Users\Navya gupta\OneDrive\Desktop\WhatsApp Video 2026-10-01 at 2.14.46 PM.mp4"
+```
+
+`configs/test_case.yaml` and the public manifest contain C01 (Connaught Place) at 10:12:05 IST and C05 (New Delhi Railway Station) at 10:15:02 IST, 30 September 2026. Road length: 1.718512 km; assigned gap: 177 seconds; implied speed: 35.0 km/h. Coordinates come from the existing road-snapped nodes, not filming locations. The chooser reads the existing frontend graph, uses existing road routes when present, otherwise straight-line distance ×1.3, preserves explicit non-AUTO camera IDs and never edits camera data. It handles one to three files, but rejects impossible graph constraints: the current road graph has no distinct three-node chain with every direct leg within 1–3 km. The requested two-node chain is valid. Existing fixed nodes are never silently replaced.
+
+### Test A — one upload without CSV
+
+1. Start FastAPI and Vite using the commands above; open `/ocr` and authenticate with the local OCR service.
+2. Upload one video, leave Step 2 closed, and enter a purpose.
+3. Press **Run OCR pipeline**. Confirm real progress, tracks, raw/normalized/voted text, confidence and timings.
+4. Confirm **Not scored. Add expected plates to measure accuracy.** No CSV is needed.
+5. A video without a readable accepted plate must return abstentions; raw candidates below threshold are not promoted to a voted read.
+6. Optional: open Step 2, label the appropriate track and save. It must be marked non-blind.
+
+The automated moving-rectangle video fixture renders `DL04CT7391` with PIL and sends an actual video through `/api/ocr/jobs`. A test-only geometric rectangle locator replaces vehicle detection because a rectangle is not a learned car class; video decoding, ByteTrack, text localization, OCR and voting are real. This is a component integration fixture, **not full YOLOX accuracy evidence**. Separate checks use the unchanged detector on the supplied clips.
+
+### Test B — two clips to Plate Trajectory
+
+1. Run the camera chooser, open `/ocr`, and choose **Load test case**. Exactly two files load with C01/C05 placements.
+2. Leave labels empty, enter a purpose and run the same upload pipeline. Expected text in the YAML is only a configurable scoring reference; it is never given to inference.
+3. Review voted reads. **Create trajectory** groups only accepted normalized plates; abstentions are excluded. Matching raw text below the vote threshold cannot create a shared journey.
+4. For accepted reads, inspect **Place on map**, its searchable camera node and IST timestamp, then click **Create trajectory**. Each plate gets one strongest accepted track per distinct clip, sorted by placement time. A single sighting is permitted and explicitly identified.
+5. Choose **Open in Plate Trajectory** and its new test-case preset. Existing presets, date searches and exports remain available.
+6. Scrub/replay at 1×–8×, select each stop, verify its video seeks to the first tracked appearance and use **Seek track** for the best measured OCR frame/box. Boxes are intentionally visible only around their actual evidence timestamp; they are not stretched across unanalysed video frames.
+7. Confirm generated/staged chips on header and stops, file-computed SHA-256, road distance, assigned speed and plausible travel. Dwell remains Not measured: a visible track duration does not establish stationary dwell.
+8. Export GeoJSON or print the case file; generated/staged properties and provenance remain present. Viewer output masks plate strings and withholds video pixels containing readable plates.
+
+A new owner-scoped officer endpoint `/api/ocr/jobs/{job_id}/trajectories` derives stops from the server's completed job, never client-provided plate predictions. It writes `trajectory_created` into the existing audit chain with user, purpose, plate token, stop count and clip hashes, without raw plate text. The browser stores up to twenty live cases and independent local video object URLs in memory; reload/sign-out releases them. Leaving OCR still purges its job; the deliberately retained case references continue to play locally. Cases never write seeded sightings, benchmark files or held-out metrics.
+
+Scoring is opt-in. The supplied clips may contain multiple vehicles, so filename labels are deliberately not assigned to every detected track: label the intended track explicitly when ambiguous. At most two independently labelled intended vehicle observations cannot establish real-world accuracy, even if both match. The generated test scoring panel stays separate from held-out results. The optional cloned-plate variant remains off and is not implemented in this update.
+
+### Verified result for the two supplied clips
+
+The actual browser-started job used RapidOCR 1.4.4 / PP-OCRv4 on CPU, unchanged YOLOX + ByteTrack, stride **15**, no expected labels, and the complete two videos (10 seconds each). Both returned an accepted voted plate of `DL04CT7391`. Gemini clip: **0.8763** vote confidence, 5 reads; WhatsApp clip: **0.8662** vote confidence. The run finished with `scored: false`, no accuracy verdict and `purged: true`. There were 16 vehicle tracks in total; only the two accepted intended-vehicle reads entered the case. The earlier denser stride-5 diagnostic was interrupted before completion and is not the final result.
+
+The completed-job trajectory endpoint returned two stops, C01 then C05, 1.719 km and 35.0 km/h with no impossible-travel flag. First tracked appearances and best OCR evidence times are taken from the actual tracks. Vote confidence is not plate accuracy or proof that the clips depict one physical vehicle.
+
+Final regression commands: `python -m pytest tests pipeline/tests -q --basetemp=output/pytest-two-clips-regression` (**96 passed**, one upstream deprecation warning); `npm test` (**56 passed**, five files); `npm run build` (strict `tsc -b` plus Vite, passed). Existing test assertions were retained; `operations.test.tsx` gained additional cases and live-store cleanup. See [this update's complete file list](OCR_TWO_CLIP_FILES.md).
+
+Browser verification additionally confirmed the actual two-stop case header/timeline, generated/staged chips, file hashes, first appearance at 1.25 seconds, second clip's best-frame seek at 4.375 seconds, and its measured overlay. At 390×844 the page's scroll width was 390 pixels. The existing route is `/trajectories`; the new case link targets it and has a regression assertion. Both supplied files played successfully in Chrome. The complete real job took 240.375 seconds on this workstation; runtime depends on available CPU and sampled vehicle count.

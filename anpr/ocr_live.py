@@ -13,7 +13,8 @@ import uuid
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from fastapi import APIRouter, Depends, HTTPException, Request
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from .live_cases import group_trajectories
 from pipeline.common import ROOT, read
 from pipeline.engines import select_engine
 from pipeline.live import LivePipeline
@@ -184,12 +185,27 @@ class JobService:
             result.update(self.pipeline.identify() if self.pipeline else {})
             result.update(duration_ms=job.get('duration_ms'),error=job.get('error'),purged=job.get('purged',False))
             result['metrics'] = score(result['files'],job['labels'],job['blind'])
+            result['scored'] = result['metrics']['scored']
+            if not result['scored']:
+                result['metrics'] = {'scored': False}
             result['timings'] = {stage:sum(f.get('stage_ms',{}).get(stage,0) for f in result['files']) for stage in ('decode','detect','track','localise','ocr','vote')}
             return result
 
 
 class Labels(BaseModel):
     expected: dict[str,str]
+
+
+class Placement(BaseModel):
+    file: str = Field(max_length=150)
+    camera_id: str = Field(max_length=20)
+    ts_ist: str = Field(max_length=40)
+    staged: bool = True
+    generated: bool = False
+
+
+class CaseRequest(BaseModel):
+    placements: list[Placement] = Field(min_length=1, max_length=20)
 
 
 def register_ocr_live(app, db, officer):
@@ -294,5 +310,22 @@ def register_ocr_live(app, db, officer):
             job.update(state='cancelled',stage='cancelled',files=[],labels={})
             service.purge(job)
             return {'state':'cancelled','purged':job['purged']}
+
+    @router.post('/jobs/{jid}/trajectories')
+    def trajectories(jid:str, body:CaseRequest, user=Depends(officer)):
+        with service.lock:
+            job = service.get(jid,user)
+            if job['state'] != 'done':
+                raise HTTPException(409,'Wait for OCR to complete before creating a trajectory')
+            manifest = ROOT/'frontend/public/videos/test-case/manifest.json'
+            hashes = [p['sha256'] for p in json.loads(manifest.read_text(encoding='utf-8')).get('placements',[])] if manifest.exists() else []
+            try:
+                cases = group_trajectories(job['files'], [p.model_dump() for p in body.placements], job['purpose'], hashes)
+            except (ValueError, KeyError) as error:
+                raise HTTPException(422,str(error)) from error
+            for case in cases:
+                service.audit(job,'trajectory_created',dict(purpose=job['purpose'],plate_token=hashlib.sha256(case['plate'].encode()).hexdigest(),
+                    stops=len(case['stops']),clip_hashes=[s['sha256'] for s in case['stops']],generated=case['generated'],staged=case['staged']))
+            return {'cases':cases}
 
     app.include_router(router)

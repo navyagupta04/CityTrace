@@ -1,6 +1,7 @@
 import { createElement } from 'react';
 
 export const provenance = {
+ generated: {text:'Generated test footage',tooltip:'AI-generated test footage; results do not measure real-world accuracy.'},
  modelled: {text:'Modelled',tooltip:'Generated from the deterministic seeded model; not a field measurement.'},
  sample: {text:'Sample record',tooltip:'Not connected to any government system.'},
  live: {text:'LIVE RUN (this upload)',tooltip:'Computed by the local OCR pipeline from this upload; not the held-out test result.'},

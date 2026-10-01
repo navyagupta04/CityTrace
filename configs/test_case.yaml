@@ -1,0 +1,13 @@
+name: Same vehicle, 2 cameras
+expected_plate: DL04CT7391
+generated: true
+staged: true
+date: '2026-09-30'
+placements:
+- file: gemini_generated_video_4835b244.mp4
+  camera_id: C01
+  start_ist: '10:12:05'
+- file: WhatsApp Video 2026-10-01 at 2.14.46 PM.mp4
+  camera_id: C05
+  start_ist: '10:15:02'
+clone_variant: false

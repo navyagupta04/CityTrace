@@ -7,3 +7,5 @@
 @media(prefers-reduced-motion:reduce){.camera-focused .camera-dot{animation:none}}
 
 .camera-health-drawer{position:fixed;inset:0 0 0 auto;margin:0;width:min(720px,100vw);max-width:100vw;height:100vh;max-height:100vh;border-radius:0;overflow:auto}.camera-health-drawer::backdrop{background:#07152155}
+
+.accuracy-step{border:1px solid var(--border);padding:16px;border-radius:12px}.accuracy-step summary{cursor:pointer;font-weight:600}.placement-row{display:flex;flex-wrap:wrap;align-items:center;gap:14px;padding:16px 0;border-bottom:1px solid var(--border)}.placement-row>strong{flex-basis:100%}.file-hash{overflow-wrap:anywhere;word-break:break-all}.live-case-journey .ocr-evidence{width:100%;max-width:900px}.live-case-journey .timeline-stop{display:block}.live-placement{margin:20px 0}.live-case-journey{margin:24px 0}@media print{.live-case-journey button,.live-case-journey .playback{display:none}.live-case-journey{break-before:page}}

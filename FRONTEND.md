@@ -1,3 +1,7 @@
+## Plain OCR and two-camera test case
+
+The live panel now runs without expected plates or CSV. Optional accuracy controls are collapsed in Step 2. Load test case uses the two supplied generated clips with staged C01/C05 placements; accepted same-plate reads can be handed to the existing Plate Trajectory page. Live cases remain in memory and clear on reload/sign-out. Generated-clip scores are separate from held-out and real-world accuracy. See [setup and Test A/B checklists](docs/OCR_LAB_LIVE.md) and [this update's complete file manifest](docs/OCR_TWO_CLIP_FILES.md).
+
 # Current operations update · 1 October 2026
 
 The OCR Lab now includes a local authenticated upload/job panel above all existing panels. Camera Health Intelligence replaces the wall (`/wall` redirects), five supplied recordings play in Live Monitoring, and density analytics no longer has a footage tab. Compact provenance chips and Data sources distinguish modelled, sample, recorded, measured, and live-upload results.

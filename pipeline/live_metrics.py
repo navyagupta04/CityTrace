@@ -23,7 +23,7 @@ def score(files, labels, blind):
             key = f"{file['file']}#{plate.get('track_id') if plate.get('track_id') is not None else i}"
             expected = normal(labels[key] if key in labels else (labels.get(file['file'], '') if len(plates) == 1 else ''))
             predicted = normal(plate.get('voted') or '') if plate.get('status') == 'read' else ''
-            plate.update(expected=expected or None, exact_match=None, cer=None, label_key=key)
+            plate.update(expected=expected or None, exact_match=None, cer=None, label_key=key, scored=bool(expected))
             if not expected:
                 continue
             correct = bool(predicted) and predicted == expected
@@ -42,8 +42,8 @@ def score(files, labels, blind):
         result['coverage_curve'].append({'threshold':t/10,'coverage':len(selected)/len(rows) if rows else 0,
                                          'accuracy':accuracy(selected)['value']})
     n = len(rows)
-    result.update(n_scored=n, blind=bool(blind and n), source='LIVE RUN (this upload)',
-                  verdict=verdict(n, result['plate_accuracy_all']['value'] if n else 0),
+    result.update(scored=bool(n), n_scored=n, blind=bool(blind and n), source='LIVE RUN (this upload)',
+                  verdict=verdict(n, result['plate_accuracy_all']['value']) if n else None,
                   reliability=[{'bin': f'{b/10:.1f}–{(b+1)/10:.1f}', 'n': len(values),
                                 'confidence': sum(v[0] for v in values)/len(values),
                                 'accuracy': sum(v[1] for v in values)/len(values)} for b, values in sorted(bins.items())])

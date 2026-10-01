@@ -1,3 +1,4 @@
+import {liveCaseStore} from './real/LiveCases/LiveCaseStore';
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { api, refreshSession, setToken } from './api';
@@ -10,7 +11,7 @@ export function SessionProvider({children}:{children:ReactNode}) {
   const accept=useCallback((result:Session)=>{setToken(result.access_token);setSession(result);setExpiresAt(Date.now()+result.expires_in*1000);},[]);
   useEffect(()=>{let active=true;api<AuthConfig>('auth/config').then(async c=>{if(!active)return;setConfig(c);if(c.has_session){try{const result=await refreshSession();if(active)accept(result);}catch{setToken('');}}}).catch(e=>{if(active)setError(e.message);}).finally(()=>{if(active)setInitializing(false);});return()=>{active=false;};},[accept]);
   const login=async(username:string,password:string,unit:string,second_factor:string)=>{accept(await api<Session>('auth/login',{username,password,unit,second_factor}));};
-  const logout=useCallback(async()=>{try{await api('auth/logout',{});}finally{setToken('');setSession(null);setExpiresAt(0);}},[]);
+  const logout=useCallback(async()=>{try{await api('auth/logout',{});}finally{liveCaseStore.clear();setToken('');setSession(null);setExpiresAt(0);}},[]);
   const renew=async()=>{accept(await refreshSession());};
   useEffect(()=>{if(!session)return;const timer=setTimeout(()=>{void logout();},Math.max(0,expiresAt-Date.now()));return()=>clearTimeout(timer);},[session,expiresAt,logout]);
   return <Context.Provider value={{session,config,initializing,error,expiresAt,login,logout,renew}}>{children}</Context.Provider>;
