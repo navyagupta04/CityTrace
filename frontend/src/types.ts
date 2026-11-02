@@ -15,7 +15,7 @@ export interface Alert { id: number; plate: string; camera_id: string; timestamp
 export interface Watch { plate: string; reason: string; created_at: string }
 export interface Audit { id: number; timestamp: string; role: string; action: string; details: string }
 export interface Vehicle { id: number; plate: string; vehicle_type: string; confidence: number; valid: number; sightings: number; last_seen: string; match_distance: number }
-export interface Hop { detection_id: number; camera_id: string; camera_name: string; timestamp: string; confidence: number; observed_plate: string; leg_distance_km: number; seconds: number|null; speed_kmh: number|null; inferred_cameras: string[]; implausible: boolean }
+export interface Hop { detection_id: number; camera_id: string; camera_name: string; timestamp: string; confidence: number; observed_plate: string; leg_distance_km: number; seconds: number|null; speed_kmh: number|null; inferred_cameras: string[]; implausible: boolean; source?:string; provenance?:string; video_file?:string|null; video_sha256?:string|null; evidence_frame?:number|null; evidence_time_s?:number|null; evidence_crop?:string|null; candidate_reads?:{frame:number;time_s:number;text:string;normalised?:string;confidence:number;quality?:number}[] }
 export interface Trajectory { found: boolean; plate: string; identity_id: number; vehicle_type: string; hops: Hop[]; total_distance_km: number; geojson: {type: 'LineString'; coordinates: [number,number][]} }
 export interface PlateRead { text: string; confidence: number; quality: number }
 export interface Evidence { id: number; camera_id: string; timestamp: string; plate: string; confidence: number; source: string; reads: PlateRead[]; resolution: {method: string; score: number; canonical_plate: string} }

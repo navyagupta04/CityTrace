@@ -8,6 +8,7 @@ import heapq
 import urllib.request
 from fastapi import HTTPException, Query
 from .config import IST
+from .config import CAMERAS as SYSTEM_CAMERAS
 
 ROOT = Path(__file__).resolve().parent.parent
 ZONES = ['Central Delhi', 'North Delhi', 'North West Delhi', 'West Delhi',
@@ -22,7 +23,7 @@ class GISStore:
         self.routes = json.loads((ROOT/'frontend/public/real/routes.json').read_text())
         self.route_directory=self.directory/'routes'
         if self.route_directory.is_dir():
-            for path in self.route_directory.glob('C*-C*.json'):
+            for path in self.route_directory.glob('*.json'):
                 self.routes['links'][path.stem]=json.loads(path.read_text())
         raw = json.loads((ROOT/'configs/cameras.json').read_text())
         self.cameras = []
@@ -30,9 +31,15 @@ class GISStore:
             c=dict(**camera,zone=ZONES[i//5],status='Offline' if i==12 else 'Processing' if i==36 else 'Online')
             c.update(self.routes['real_position'].get(c['id'],{}))
             self.cameras.append(c)
+        self.route_cameras=list(self.cameras)
+        known={c['id'] for c in self.route_cameras}
+        for camera in SYSTEM_CAMERAS:
+            if camera.id not in known:
+                self.route_cameras.append({'id':camera.id,'name':camera.name,'lat':camera.lat,'lon':camera.lon,
+                                           'zone':'West Delhi','status':'Online','staged':True})
 
     def route(self,from_id,to_id,refresh=False):
-        lookup={c['id']:c for c in self.cameras}
+        lookup={c['id']:c for c in self.route_cameras}
         if from_id not in lookup or to_id not in lookup:raise ValueError('Unknown camera ID')
         key=from_id+'-'+to_id
         if refresh:

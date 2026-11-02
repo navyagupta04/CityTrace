@@ -1,21 +1,21 @@
 {
-  "name": "Same vehicle, 2 cameras",
+  "name": "Real footage, staged Patel Nagar to Moti Nagar",
   "expected_plate": "DL04CT7391",
-  "generated": true,
+  "generated": false,
   "staged": true,
-  "date": "2026-09-30",
+  "date": "2026-11-02",
   "placements": [
     {
       "file": "gemini_generated_video_4835b244.mp4",
-      "camera_id": "C01",
-      "start_ist": "10:12:05",
+      "camera_id": "CAM-PN-01",
+      "start_ist": "10:00:00",
       "url": "/videos/test-case/gemini_generated_video_4835b244.mp4",
       "sha256": "a8fb835dfb677f598a6f7f5fcea8878fc2c161026ee629fd1a1bba9f723f2426"
     },
     {
       "file": "WhatsApp Video 2026-10-01 at 2.14.46 PM.mp4",
-      "camera_id": "C05",
-      "start_ist": "10:15:02",
+      "camera_id": "CAM-MN-01",
+      "start_ist": "10:15:00",
       "url": "/videos/test-case/WhatsApp Video 2026-10-01 at 2.14.46 PM.mp4",
       "sha256": "bb9d195fd653e6ff383197984cd5f5e6cc6cbf1a06abbd56eaac906845246d5e"
     }
@@ -23,20 +23,20 @@
   "clone_variant": false,
   "legs": [
     {
-      "node": "C01",
-      "lat": 28.631582,
-      "lon": 77.217079,
+      "node": "CAM-PN-01",
+      "lat": 28.645,
+      "lon": 77.17,
       "distance_km": 0,
       "gap_s": 0,
       "speed_kmh": null
     },
     {
-      "node": "C05",
-      "lat": 28.642958,
-      "lon": 77.218278,
-      "distance_km": 1.719,
-      "gap_s": 177,
-      "speed_kmh": 35.0
+      "node": "CAM-MN-01",
+      "lat": 28.658,
+      "lon": 77.142,
+      "distance_km": 3.2,
+      "gap_s": 900,
+      "speed_kmh": 12.8
     }
   ]
 }

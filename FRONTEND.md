@@ -1,6 +1,6 @@
 ## Plain OCR and two-camera test case
 
-The live panel now runs without expected plates or CSV. Optional accuracy controls are collapsed in Step 2. Load test case uses the two supplied generated clips with staged C01/C05 placements; accepted same-plate reads can be handed to the existing Plate Trajectory page. Live cases remain in memory and clear on reload/sign-out. Generated-clip scores are separate from held-out and real-world accuracy. See [setup and Test A/B checklists](docs/OCR_LAB_LIVE.md) and [this update's complete file manifest](docs/OCR_TWO_CLIP_FILES.md).
+The live panel runs without expected plates or CSV. Optional accuracy controls are collapsed in Step 2. Load test case uses the two supplied real video files with staged approximate Patel Nagar/Moti Nagar placements; accepted same-plate reads can be handed to the existing Plate Trajectory page. Live cases remain in memory and clear on reload/sign-out. Their scores are not a held-out or real-world accuracy measure. See [setup and Test A/B checklists](docs/OCR_LAB_LIVE.md) and [this update's complete file manifest](docs/OCR_TWO_CLIP_FILES.md).
 
 # Current operations update · 1 October 2026
 

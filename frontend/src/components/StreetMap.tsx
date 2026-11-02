@@ -47,7 +47,7 @@ export default function StreetMap({densityPeriod,cameras,trajectory,compare,prog
  const mapped=useMemo(()=>cameras.filter(c=>region==='All Delhi'||cameraById.get(c.id)?.region===region).map(c=>({...c,...network?.routes.real_position[c.id]})),[cameras,region,network]);
  const lookup=useMemo(()=>new Map(cameras.map(c=>[c.id,{...c,...network?.routes.real_position[c.id]}])),[cameras,network]);
  const stats=new Map(today?.cameras.map(c=>[c.id,c])||[]),trip=searchedRoute||trajectory;
- const edge=(from:string,to:string)=>toLatLng(roadRoute(network,from,to));
+ const edge=(from:string,to:string)=>{const found=roadRoute(network,from,to);if(found.length)return toLatLng(found);if(trip?.geojson.coordinates.length&&trip.hops.some((h,i)=>i>0&&trip.hops[i-1].camera_id===from&&h.camera_id===to))return toLatLng(trip.geojson.coordinates);if(trip?.geojson.coordinates.length&&trip.hops.some((h,i)=>i>0&&trip.hops[i-1].camera_id===to&&h.camera_id===from))return toLatLng([...trip.geojson.coordinates].reverse());return [];};
  const route=(ids:string[])=>ids.slice(1).flatMap((id,i)=>{const points=edge(ids[i],id);return i?points.slice(1):points;});
  const path=(t:NonNullable<typeof trajectory>)=>route(t.hops.flatMap((h,i)=>i?[...h.inferred_cameras,h.camera_id]:[h.camera_id]));
  const segments=trip?.hops.slice(1).flatMap((hop,i)=>{
@@ -72,7 +72,7 @@ export default function StreetMap({densityPeriod,cameras,trajectory,compare,prog
   {searchMessage&&<p role="status" className="gis-message">{searchMessage}</p>}
   <div className={`gis-map ${large?'large':''}`}>
    <MapContainer center={[28.63,77.21]} zoom={11} minZoom={9} maxZoom={18} maxBounds={NCR} maxBoundsViscosity={.9} scrollWheelZoom style={{height:'100%',width:'100%'}}>
-    <Focus point={focus?[focus.lat,focus.lon]:undefined}/><RouteFit points={searchedRoute?path(searchedRoute):[]} token={searchedRoute?.plate||''}/><Controls/><ScaleControl position="bottomleft" imperial={false}/>
+    <Focus point={focus?[focus.lat,focus.lon]:undefined}/><RouteFit points={trip?path(trip):[]} token={trip?`${trip.plate}-${trip.geojson.coordinates.map(p=>p.join(',')).join(';')}`:''}/><Controls/><ScaleControl position="bottomleft" imperial={false}/>
     <GeoJSON data={boundary as GeoJsonObject} style={{color:'#809bbb',weight:2,fillOpacity:0,dashArray:'6 4'}}/>
     <LayersControl position="topright">
      <LayersControl.BaseLayer checked name="Road view"><TileLayer className="gis-road-tiles" url="https://tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a> · Boundary: DataMeet (CC BY-SA 2.5 IN)' eventHandlers={{tileerror:()=>setTileError(true),tileload:()=>setTileError(false)}}/></LayersControl.BaseLayer>

@@ -123,6 +123,10 @@ class LivePipeline:
             voted = aggregate([read for _, read in candidates], self.cfg['plate']['vote_threshold'])
             result.update(box=box, raw=best.text, normalised=normal.text, format=normal.format,
                           ocr_confidence=best.confidence, voted=voted.pop('text'), **voted)
+            result['candidate_reads'] = [
+                {'text': read.text, 'confidence': read.confidence, 'quality': read.quality}
+                for _, read in candidates
+            ]
             threshold = self.cfg.get('confidence_warning_threshold', .8)
             result.update(character_confidences=list(best.characters),
                           plate_detection_confidence=best.detection_confidence,
@@ -214,6 +218,7 @@ class LivePipeline:
                     progress('detect / track', .6*(index+stride)/max(1,limit))
                 for position, (tid, track) in enumerate(tracks.items()):
                     candidates = []
+                    candidate_frame_details = []
                     best_frame = track['first_frame']
                     best_score = -1
                     for _, index, (a,b,w,h) in track.pop('frames'):
@@ -229,11 +234,16 @@ class LivePipeline:
                         if found:
                             box, read = max(found, key=lambda r:r[1].confidence*r[1].quality)
                             candidates.append(([box[0]+a,box[1]+b,box[2],box[3]], read))
+                            candidate_frame_details.append({'frame':index,'time_s':index/fps,'text':read.text,
+                                'normalised':normalize(read.text).text,'confidence':read.confidence,'quality':read.quality,
+                                'box':[box[0]+a,box[1]+b,box[2],box[3]]})
                             if read.confidence*read.quality > best_score:
                                 best_frame, best_score = index, read.confidence*read.quality
                     plate = self.voted(candidates, stage)
                     plate.update(track_id=tid, first_time_s=track['first_frame']/fps,
                                  time_s=best_frame/fps, **track)
+                    plate['evidence_frame'] = best_frame
+                    plate['candidate_reads'] = candidate_frame_details
                     if plate['box']:
                         cap.set(cv2.CAP_PROP_POS_FRAMES,best_frame)
                         ok, best_image=cap.read()

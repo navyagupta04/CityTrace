@@ -1,5 +1,6 @@
 """Ordered observed hops with explicitly marked shortest-path inferences."""
 from datetime import datetime
+import json
 from .config import MAX_SPEED_KMH
 from .plates import normalize, weighted_distance
 
@@ -29,10 +30,17 @@ def search(db, graph, query: str) -> dict:
         for node in path if not coordinates else path[1:]:
             camera = graph.cameras[node]
             coordinates.append([camera.lon, camera.lat])
+        payload = json.loads(row['payload'])
+        metadata = payload.get('metadata') or {}
+        frame = metadata.get('evidence_frame') or {}
         hops.append({'detection_id': row['id'], 'camera_id': row['camera_id'], 'camera_name': graph.cameras[row['camera_id']].name,
                      'timestamp': row['timestamp'], 'confidence': row['confidence'], 'observed_plate': row['plate'],
                      'leg_distance_km': round(km, 2), 'seconds': seconds, 'speed_kmh': speed,
-                     'inferred_cameras': path[1:-1], 'implausible': bool(previous and km and (seconds == 0 or speed > MAX_SPEED_KMH))})
+                     'inferred_cameras': path[1:-1], 'implausible': bool(previous and km and (seconds == 0 or speed > MAX_SPEED_KMH)),
+                     'source': payload.get('source', 'unknown'), 'provenance': metadata.get('provenance', payload.get('source', 'unknown')),
+                     'video_file': metadata.get('video_file'), 'video_sha256': metadata.get('video_sha256'),
+                     'evidence_frame': frame.get('frame'), 'evidence_time_s': frame.get('time_s'),
+                     'evidence_crop': frame.get('crop_image'), 'candidate_reads': metadata.get('candidate_reads', [])})
         previous = row
     if len(coordinates) == 1:
         coordinates *= 2  # valid degenerate GeoJSON LineString for a single observation

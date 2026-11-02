@@ -55,9 +55,14 @@ class Database:
                 id INTEGER PRIMARY KEY, timestamp TEXT NOT NULL, role TEXT NOT NULL,
                 action TEXT NOT NULL, details TEXT NOT NULL);
             CREATE TABLE IF NOT EXISTS metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL);
+            CREATE TABLE IF NOT EXISTS alert_evaluations (
+                detection_id INTEGER PRIMARY KEY REFERENCES detections(id) ON DELETE CASCADE,
+                evaluated_at TEXT NOT NULL);
         ''')
         for key, value in [('anchor', '0' * 64), ('head', '0' * 64), ('count', '0')]:
             self.conn.execute('INSERT OR IGNORE INTO metadata VALUES (?,?)', (key, value))
+        self.conn.execute('''INSERT OR IGNORE INTO alert_evaluations(detection_id,evaluated_at)
+                             SELECT DISTINCT detection_id,? FROM alerts WHERE detection_id IS NOT NULL''', (utcnow(),))
         self.conn.commit()
 
     @contextmanager

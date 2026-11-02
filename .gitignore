@@ -4,6 +4,7 @@ __pycache__/
 data/
 *.sqlite3*
 .env
+*.env.local
 models/
 output/
 .uv-cache/

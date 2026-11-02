@@ -1,0 +1,8 @@
+{
+  "clone_plate": {"enabled": true, "severity": "HIGH", "max_plausible_speed_kmph": 140, "min_read_confidence": 0.80, "fuzzy_identity_distance": 0.3, "min_gap_seconds_to_flag": 0, "require_distinct_cameras": true, "lookback_window_minutes": 180},
+  "overspeed": {"enabled": true, "severity": "MEDIUM", "default_limit_kmph": 50, "camera_limits_kmph": {}, "zone_limits_kmph": {}, "tolerance_kmph": 5, "method": "camera_reported_speed"},
+  "wrong_way": {"enabled": true, "severity": "MEDIUM", "direction_tolerance_degrees": 60, "min_read_confidence": 0.80, "expected_bearings_degrees": {"C01": 0, "C02": 0, "C03": 90, "C04": 180, "C05": 180, "C06": 270, "C07": 270, "C08": 90, "CAM-PN-01": 270, "CAM-MN-01": 90}, "bearing_data_note": "Illustrative demo bearings only. Replace with surveyed camera direction before operational use."},
+  "blacklist": {"enabled": true, "severity_by_reason": {"stolen": "HIGH", "wanted": "HIGH", "suspect": "MEDIUM", "default": "HIGH", "fuzzy": "MEDIUM"}, "max_fuzzy_distance": 0.3},
+  "restricted_hours": {"enabled": true, "severity": "MEDIUM", "timezone": "Asia/Kolkata", "start_hour": 22, "end_hour": 6},
+  "repeat_visits": {"enabled": false, "severity": "LOW", "count": 3, "window_minutes": 30}
+}

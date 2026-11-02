@@ -33,7 +33,7 @@ class ReasonRequest(BaseModel):
 
 
 class WorkflowRequest(BaseModel):
-    status: Literal['Open', 'Acknowledged', 'Escalated', 'Closed']
+    status: Literal['Open', 'Acknowledged', 'Escalated', 'Verified', 'Dispatched', 'Closed', 'False Positive']
     assignee: str = Field(default='', max_length=80)
     note: str = Field(default='', max_length=500)
 
@@ -53,6 +53,12 @@ def register_frontend_api(app, platform, auth, settings):
             CREATE TABLE IF NOT EXISTS case_notes (
             id INTEGER PRIMARY KEY, identity_id INTEGER REFERENCES identities(id) ON DELETE CASCADE,
             username TEXT NOT NULL, timestamp TEXT NOT NULL, note TEXT NOT NULL);''')
+    demo_platform = getattr(platform, 'demo_platform', None)
+    if demo_platform:
+        with demo_platform.db.transaction():
+            demo_platform.db.conn.executescript('''CREATE TABLE IF NOT EXISTS alert_workflow (
+                alert_id INTEGER PRIMARY KEY REFERENCES alerts(id) ON DELETE CASCADE,
+                status TEXT NOT NULL, assignee TEXT NOT NULL, note TEXT NOT NULL);''')
 
     def current(authorization: str = Header(default='')):
         return auth.authenticate(authorization)
@@ -201,16 +207,30 @@ def register_frontend_api(app, platform, auth, settings):
     @router.get('/alerts/workflow')
     def workflows(user=Depends(officer)):
         states = {r['alert_id']: r for r in db.rows('SELECT * FROM alert_workflow')}
-        return [{**a, **states.get(a['id'], {'status': 'Open', 'assignee': '', 'note': ''})} for a in list_alerts(db, 500)]
+        result = [{**a, **states.get(a['id'], {'status': 'Open', 'assignee': '', 'note': ''})} for a in list_alerts(db, 500)]
+        demo = getattr(platform, 'demo_platform', None)
+        if demo:
+            demo_states = {r['alert_id']: r for r in demo.db.rows('SELECT * FROM alert_workflow')}
+            result += [{**a, 'id': 1_000_000_000+a['id'], **demo_states.get(a['id'], {'status': 'Open', 'assignee': '', 'note': ''})}
+                       for a in list_alerts(demo.db, 500)]
+        return sorted(result, key=lambda a: (a['timestamp'], a['id']), reverse=True)[:500]
 
     @router.post('/alerts/{alert_id}/workflow')
     def workflow(alert_id: int, body: WorkflowRequest, user=Depends(officer)):
-        if not db.rows('SELECT id FROM alerts WHERE id=?', (alert_id,)):
+        demo = getattr(platform, 'demo_platform', None) if alert_id >= 1_000_000_000 else None
+        target_db = demo.db if demo else db
+        native_id = alert_id - 1_000_000_000 if demo else alert_id
+        if demo:
+            with demo.db.transaction():
+                demo.db.conn.execute('''CREATE TABLE IF NOT EXISTS alert_workflow (
+                    alert_id INTEGER PRIMARY KEY REFERENCES alerts(id) ON DELETE CASCADE,
+                    status TEXT NOT NULL, assignee TEXT NOT NULL, note TEXT NOT NULL)''')
+        if not target_db.rows('SELECT id FROM alerts WHERE id=?', (native_id,)):
             raise HTTPException(404, 'Alert not found')
-        with db.transaction():
-            db.conn.execute('INSERT INTO alert_workflow VALUES (?,?,?,?) ON CONFLICT(alert_id) DO UPDATE SET status=excluded.status,assignee=excluded.assignee,note=excluded.note',
-                            (alert_id, body.status, body.assignee, body.note))
-            db.audit(user['role'], 'alert.workflow', {'user': user['username'], 'alert_id': alert_id, **body.model_dump()})
+        with target_db.transaction():
+            target_db.conn.execute('INSERT INTO alert_workflow VALUES (?,?,?,?) ON CONFLICT(alert_id) DO UPDATE SET status=excluded.status,assignee=excluded.assignee,note=excluded.note',
+                                   (native_id, body.status, body.assignee, body.note))
+            target_db.audit(user['role'], 'alert.workflow', {'user': user['username'], 'alert_id': alert_id, **body.model_dump()})
         return {'ok': True}
 
     @router.delete('/watchlist/{plate}')

@@ -74,14 +74,20 @@ def test_late_event_checked_against_both_neighbors(platform,event):
     assert later['identity_id'] != first['identity_id']
 
 
-@pytest.mark.parametrize('confidence,severity',[(.98,'HIGH'),(.6,'MEDIUM')])
-def test_clone(platform,event,confidence,severity):
-    platform.ingest(event(confidence=confidence))
+def test_clone(platform,event):
+    platform.ingest(event())
     result=platform.ingest(event(camera='C08',minutes=4))
     alert=next(a for a in result['alerts'] if a['kind']=='cloned_plate')
-    assert alert['severity']==severity
+    assert alert['severity']=='HIGH'
     assert alert['evidence']['distance_km']==13
     assert alert['evidence']['implied_speed_kmh']==195
+
+
+def test_low_confidence_clone_is_review_note(platform,event):
+    platform.ingest(event(confidence=.6))
+    result=platform.ingest(event(camera='C08',minutes=4,confidence=.6))
+    assert not any(a['kind']=='cloned_plate' for a in result['alerts'])
+    assert any(a['kind']=='needs_review' for a in result['alerts'])
 
 
 def test_watchlist_exact_lookalike_and_restricted(platform,event):

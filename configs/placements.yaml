@@ -1,4 +1,24 @@
 clips:
+  - id: staged-patel-nagar
+    file: videos/gemini_generated_video_4835b244.mp4
+    camera_id: CAM-PN-01
+    start_ist: '2026-11-02T10:00:00+05:30'
+    staged: true
+    location: Patel Nagar
+    latitude: 28.645
+    longitude: 77.170
+    coordinate_accuracy: approximate
+    provenance: staged/illustrative placement, not filming location
+  - id: staged-moti-nagar
+    file: videos/WhatsApp Video 2026-10-01 at 2.14.46 PM.mp4
+    camera_id: CAM-MN-01
+    start_ist: '2026-11-02T10:15:00+05:30'
+    staged: true
+    location: Moti Nagar
+    latitude: 28.658
+    longitude: 77.142
+    coordinate_accuracy: approximate
+    provenance: staged/illustrative placement, not filming location
   - id: intel-cars
     file: data/videos/car-detection.mp4
     camera_id: C01

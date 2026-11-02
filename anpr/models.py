@@ -16,11 +16,14 @@ class PlateRead(StrictModel):
 
 class IngestEvent(StrictModel):
     event_id: str = Field(min_length=1, max_length=200)
-    camera_id: str = Field(pattern=r'^C0[1-8]$')
+    camera_id: str = Field(min_length=1, max_length=80)
     timestamp: datetime
     vehicle_type: Literal['car', 'truck', 'bus', 'motorcycle', 'unknown'] = 'car'
     reads: list[PlateRead] = Field(min_length=1, max_length=120)
     source: str = Field(default='api', max_length=200)
+    metadata: dict = Field(default_factory=dict)
+    speed_kmph: float | None = Field(default=None, ge=0, le=400)
+    direction: str | float | None = None
 
     @field_validator('timestamp')
     @classmethod
@@ -35,9 +38,16 @@ class SimulationRequest(StrictModel):
     seed: int = Field(default=26127, ge=0, le=2147483647)
 
 
+class DemoInjectRequest(StrictModel):
+    scenario: Literal['clone', 'clone_simultaneous', 'blacklist', 'overspeed', 'wrong_way', 'restricted_hours', 'all', 'reset']
+    plate: str = Field(default='DL8CAF5030', min_length=5, max_length=20)
+    from_camera: str | None = Field(default=None, max_length=80)
+    to_camera: str | None = Field(default=None, max_length=80)
+
+
 class TrafficEvent(StrictModel):
     event_id: str = Field(min_length=1, max_length=200)
-    camera_id: str = Field(pattern=r'^C0[1-8]$')
+    camera_id: str = Field(min_length=1, max_length=80)
     timestamp: datetime
     vehicle_type: Literal['car', 'truck', 'bus', 'motorcycle', 'unknown'] = 'unknown'
     source: str = Field(default='video', max_length=200)

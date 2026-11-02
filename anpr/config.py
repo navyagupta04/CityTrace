@@ -2,6 +2,18 @@
 from dataclasses import dataclass
 from datetime import timezone, timedelta
 import os
+from pathlib import Path
+
+# Load the repository's ignored local environment file without requiring a
+# dotenv package; explicit process environment always takes precedence.
+_ENV_FILE = Path(__file__).resolve().parent.parent / '.env'
+if _ENV_FILE.is_file():
+    for _line in _ENV_FILE.read_text(encoding='utf-8').splitlines():
+        _line = _line.strip()
+        if not _line or _line.startswith('#') or '=' not in _line:
+            continue
+        _key, _value = _line.split('=', 1)
+        os.environ.setdefault(_key.strip(), _value.strip().strip('"\''))
 
 IST = timezone(timedelta(hours=5, minutes=30))
 MAX_SPEED_KMH = 110.0
@@ -18,6 +30,7 @@ class Camera:
     restricted: bool = False
     restricted_start: int = 22
     restricted_end: int = 6
+    expected_bearing: float | None = None
 
 
 CAMERAS = [
@@ -29,6 +42,8 @@ CAMERAS = [
     Camera('C06', 'India Gate', 28.613, 77.229),
     Camera('C07', 'Dhaula Kuan', 28.592, 77.163),
     Camera('C08', 'Defence Enclave', 28.574, 77.227, True),
+    Camera('CAM-PN-01', 'Patel Nagar (approximate staged placement)', 28.645, 77.170),
+    Camera('CAM-MN-01', 'Moti Nagar (approximate staged placement)', 28.658, 77.142),
 ]
 # Undirected illustrative road lengths; C01 -> C08 is exactly 13 km.
 ROADS = [
@@ -38,6 +53,7 @@ ROADS = [
     ('C04', 'C06', 3.0, 50), ('C05', 'C06', 2.8, 45),
     ('C03', 'C07', 8.0, 60), ('C06', 'C07', 8.5, 60),
     ('C06', 'C08', 6.0, 55), ('C07', 'C08', 8.0, 60),
+    ('CAM-PN-01', 'CAM-MN-01', 3.2, 35),
 ]
 
 
@@ -46,3 +62,4 @@ class Settings:
     database: str = os.getenv('ANPR_DATABASE', 'data/nexus.sqlite3')
     api_key: str = os.getenv('ANPR_API_KEY', '')
     demo_mode: bool = os.getenv('ANPR_DEMO_MODE', 'true').lower() == 'true'
+    poll_interval_seconds: float = max(0.25, float(os.getenv('ANPR_POLL_INTERVAL_SECONDS', '2')))

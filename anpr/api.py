@@ -2,15 +2,15 @@
 import asyncio
 from contextlib import asynccontextmanager
 from dataclasses import asdict
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import hmac
 from pathlib import Path
-from fastapi import FastAPI, Depends, Header, HTTPException, Query, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, Depends, Header, HTTPException, Query, WebSocket, WebSocketDisconnect, Request
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.concurrency import run_in_threadpool
 from .config import Settings, ROADS
-from .models import IngestEvent, SimulationRequest, WatchRequest, PurgeRequest, TrafficEvent
+from .models import IngestEvent, SimulationRequest, WatchRequest, PurgeRequest, TrafficEvent, DemoInjectRequest
 from .platform import Platform
 from .simulator import run
 from .alerts import list_alerts
@@ -25,22 +25,42 @@ def create_app(database: str | None = None, settings: Settings | None = None) ->
     if not settings.demo_mode and not settings.api_key:
         raise RuntimeError('ANPR_API_KEY is required when ANPR_DEMO_MODE=false')
     platform = Platform(database or settings.database)
+    demo_database = ':memory:' if database == ':memory:' else str(Path(__file__).resolve().parent.parent / 'data' / 'demo_injections.sqlite3')
+    demo_platform = Platform(demo_database) if settings.demo_mode else None
+    platform.demo_platform = demo_platform
     auth_service = Auth(platform.db, settings.demo_mode)
     clients: dict[WebSocket, asyncio.Queue] = {}
     simulation_lock = asyncio.Lock()
 
     @asynccontextmanager
     async def lifespan(app):
+        async def poll_database():
+            while True:
+                try:
+                    result = await asyncio.to_thread(platform.poll_new_observations)
+                    if result.get('alerts'):
+                        await publish(result['alerts'])
+                except asyncio.CancelledError:
+                    raise
+                except Exception:
+                    # Keep service alive; evidence remains pending and is retried next cycle.
+                    pass
+                await asyncio.sleep(settings.poll_interval_seconds)
+        poll_task = asyncio.create_task(poll_database())
         yield
+        poll_task.cancel()
+        await asyncio.gather(poll_task, return_exceptions=True)
         if hasattr(app.state, 'ocr_jobs'):
             await asyncio.to_thread(app.state.ocr_jobs.close)
         platform.db.close()
+        if demo_platform:
+            demo_platform.db.close()
 
     app = FastAPI(title='NEXUS · City Traffic Intelligence', version='1.0.0', lifespan=lifespan, docs_url=None, redoc_url=None)
     app.state.platform = platform
     import os
     from fastapi.middleware.cors import CORSMiddleware
-    origins = os.getenv('OCR_CORS_ORIGINS', 'http://127.0.0.1:5173,http://localhost:5173').split(',')
+    origins = os.getenv('OCR_CORS_ORIGINS', 'http://127.0.0.1:5173,http://localhost:5173,http://127.0.0.1:5174,http://localhost:5174').split(',')
     app.add_middleware(CORSMiddleware, allow_origins=origins, allow_credentials=True,
                        allow_methods=['GET','POST','DELETE'], allow_headers=['Authorization','Content-Type'])
 
@@ -86,6 +106,10 @@ def create_app(database: str | None = None, settings: Settings | None = None) ->
     def health():
         return {'status': 'ok', 'mode': 'demo' if settings.demo_mode else 'gateway', 'version': '1.0.0', 'timezone': 'Asia/Kolkata'}
 
+    @app.get('/api/alert-rules')
+    def alert_rules(role=Depends(require('viewer'))):
+        return platform.alert_engine.public_rules()
+
     @app.get('/api/cameras')
     def cameras(role=Depends(require('viewer'))):
         return {'cameras': [asdict(c) for c in platform.graph.cameras.values()],
@@ -119,7 +143,32 @@ def create_app(database: str | None = None, settings: Settings | None = None) ->
 
     @app.get('/api/trajectory')
     def trajectory(plate: str = Query(min_length=1, max_length=40), role=Depends(require('officer'))):
-        return platform.search(plate, role)
+        result = platform.search(plate, role)
+        if result.get('found') and len(result.get('hops', [])) > 1:
+            coordinates, total = [], 0.0
+            for index, hop in enumerate(result['hops']):
+                if index == 0:
+                    continue
+                previous = result['hops'][index-1]
+                staged = previous['camera_id'].startswith('CAM-') or hop['camera_id'].startswith('CAM-')
+                try:
+                    route = app.state.gis.route(previous['camera_id'], hop['camera_id'], refresh=staged)
+                    points = route['coordinates']; km = float(route['road_distance_km'])
+                except (ValueError, KeyError, IndexError):
+                    points, km = [], 0.0
+                if points:
+                    coordinates.extend(points if not coordinates else points[1:])
+                    total += km
+                    hop['leg_distance_km'] = round(km, 2)
+                    seconds = hop.get('seconds')
+                    hop['speed_kmh'] = round(km*3600/seconds, 1) if seconds and seconds > 0 else None
+                else:
+                    # Do not substitute an invented straight-line segment.
+                    coordinates = []
+                    break
+            result['total_distance_km'] = round(total, 2)
+            result['geojson'] = {'type': 'LineString', 'coordinates': coordinates}
+        return result
 
     @app.get('/api/analytics/summary')
     def summary(role=Depends(require('viewer'))):
@@ -136,7 +185,92 @@ def create_app(database: str | None = None, settings: Settings | None = None) ->
 
     @app.get('/api/alerts')
     def alerts(limit: int = Query(default=100, ge=1, le=500), role=Depends(require('officer'))):
-        return list_alerts(platform.db, limit)
+        primary = list_alerts(platform.db, limit)
+        demo = list_alerts(demo_platform.db, limit) if demo_platform else []
+        return sorted(primary + [{**a, 'id': 1_000_000_000+a['id']} for a in demo],
+                      key=lambda a: (a['timestamp'], a['id']), reverse=True)[:limit]
+
+    @app.post('/api/demo/inject')
+    async def inject_demo(body: DemoInjectRequest, request: Request, role=Depends(require('admin'))):
+        if not settings.demo_mode or demo_platform is None:
+            raise HTTPException(404, 'Demo scenarios are unavailable in gateway mode')
+        if not request.client or request.client.host not in ('127.0.0.1', '::1', 'testclient'):
+            raise HTTPException(403, 'Demo injection is restricted to local clients')
+        demo = demo_platform
+        if body.scenario == 'reset':
+            result = demo.db.purge('9999-12-31T23:59:59+00:00')
+            with demo.db.transaction():
+                demo.db.conn.execute('DELETE FROM watchlist')
+                demo.db.conn.execute('DELETE FROM alert_evaluations')
+            return {'scenario': 'reset', 'deleted_demo_detections': result['deleted'], 'integrity': demo.db.verify()}
+
+        cams = list(demo.graph.cameras.values())
+        pairs = []
+        for a in cams:
+            for b in cams:
+                if a.id == b.id:
+                    continue
+                km, path = demo.graph.shortest(a.id, b.id)
+                if path and km < float('inf'):
+                    pairs.append((km, a.id, b.id))
+        pairs.sort(reverse=True)
+        source = body.from_camera or (pairs[0][1] if pairs else None)
+        destination = body.to_camera or next((b for _, a, b in pairs if a == source and b != source), None)
+        if not source or not destination or source == destination:
+            raise HTTPException(422, 'Choose two different configured cameras')
+        if source not in demo.graph.cameras or destination not in demo.graph.cameras:
+            raise HTTPException(422, 'Camera is not in the configured camera registry')
+        now = datetime.now(timezone(timedelta(hours=5, minutes=30))).replace(microsecond=0)
+        injected, fired = [], []
+        def add(plate, camera, stamp, *, speed=None, direction=None, name=None):
+            event = {'event_id': 'demo-' + __import__('uuid').uuid4().hex, 'camera_id': camera,
+                     'timestamp': stamp.isoformat(), 'vehicle_type': 'car',
+                     'reads': [{'text': plate, 'confidence': .97, 'quality': .95}] * 3,
+                     'source': 'simulated injection (demo)',
+                     'metadata': {'provenance': 'simulated injection (demo)', 'scenario': name or body.scenario},
+                     'speed_kmph': speed, 'direction': direction}
+            result = demo.ingest(event)
+            injected.append(result['detection']['id']); fired.extend(result['alerts'])
+        scenarios = ['clone', 'blacklist', 'overspeed', 'wrong_way', 'restricted_hours'] if body.scenario == 'all' else [body.scenario]
+        for scenario in scenarios:
+            if scenario == 'clone':
+                add(body.plate, source, now, name=scenario)
+                add(body.plate, destination, now+timedelta(minutes=5), name=scenario)
+                # Separate control plate: a normal 45-minute observation gap.
+                control = body.plate[:-1] + ('1' if body.plate[-1] != '1' else '2')
+                add(control, source, now+timedelta(minutes=10), name='clone realistic-gap control')
+                add(control, destination, now+timedelta(minutes=55), name='clone realistic-gap control')
+            elif scenario == 'clone_simultaneous':
+                add(body.plate, source, now, name=scenario); add(body.plate, destination, now, name=scenario)
+            elif scenario == 'blacklist':
+                watched = body.plate[:-1] + ('9' if body.plate[-1] != '9' else '8')
+                demo.watch(watched, 'suspect · DEMO-CASE-001')
+                add(watched, source, now, name=scenario)
+            elif scenario == 'overspeed':
+                reported_plate = body.plate[:-1] + ('5' if body.plate[-1] != '5' else '6')
+                add(reported_plate, source, now, speed=92, name='overspeed camera-reported')
+                # A 2.4 km leg in two minutes estimates 72 km/h, below clone speed.
+                short_pair = next(((a,b) for km,a,b in sorted(pairs) if 0 < km <= 3.2), None)
+                if short_pair:
+                    plate2 = body.plate[:-1] + ('3' if body.plate[-1] != '3' else '4')
+                    add(plate2, short_pair[0], now+timedelta(minutes=7), name='average-speed control start')
+                    add(plate2, short_pair[1], now+timedelta(minutes=9), name='average-speed pair')
+            elif scenario == 'wrong_way':
+                rule = demo.alert_engine.rules.wrong_way
+                available = list(rule.expected_bearings_degrees.items())
+                if not available:
+                    continue
+                camera, expected = available[0]
+                add(body.plate, camera, now, direction=(expected+180)%360, name=scenario)
+            elif scenario == 'restricted_hours':
+                restricted = next((c for c in cams if c.restricted), None)
+                if restricted:
+                    stamp = now.replace(hour=2, minute=30)
+                    add(body.plate, restricted.id, stamp, name=scenario)
+        await publish([{**a, 'id': 1_000_000_000+a['id']} for a in fired])
+        return {'scenario': body.scenario, 'injected_detection_ids': injected,
+                'alerts': [{**a, 'id': 1_000_000_000+a['id']} for a in fired],
+                'integrity': demo.db.verify()}
 
     @app.get('/api/watchlist')
     def watchlist(role=Depends(require('officer'))):

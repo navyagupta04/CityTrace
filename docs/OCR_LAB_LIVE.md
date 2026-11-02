@@ -135,7 +135,7 @@ The existing offline OCR preprocessing was extracted into `prepare_piece` and re
 
 ## Plain OCR and the two supplied test clips — update
 
-The current request supplies **two** 10-second, 1280×720 clips. The test case uses exactly these two, in filename order, rather than duplicating footage to create a third stop. Their bytes are copied unchanged into `frontend/public/videos/test-case/`; the Desktop originals remain unchanged. Both are labelled **Generated test footage** and **Staged placement**. The earlier five-feed monitoring grid and all prior trajectory presets remain intact.
+The current request supplies **two** 10-second, 1280×720 real video files. The user confirmed the earlier `generated: true` manifest label was stale; both source files are now recorded as real footage. The test case uses exactly these two files, in filename order, and their copies under `frontend/public/videos/test-case/` are byte-identical to `videos/`. Both use **Staged placement** because Patel Nagar/Moti Nagar are illustrative camera locations, not verified filming locations. The earlier five-feed monitoring grid and all prior trajectory presets remain intact.
 
 Step 1 is **Upload and run**, with **No labels needed.** Pick files, enter a purpose of at least five characters and run when the local engine is ready. Step 2 is a collapsed **Measure accuracy (optional)** accordion containing expected plates and the CSV importer. With no entered labels the request omits both `expected` and `blind`. The response has `scored: false`, per-row `scored: false`, and `metrics: {scored: false}` with no verdict. Expected/Match/CER columns remain hidden. Summary cards and actual OCR results still appear. **Measure accuracy** opens Step 2; saving post-run labels recomputes metrics as non-blind.
 
@@ -153,7 +153,7 @@ To import the original two files into a fresh checkout first:
 .\.venv\Scripts\python.exe -m scripts.choose_test_cameras "C:\Users\Navya gupta\OneDrive\Desktop\gemini_generated_video_4835b244.mp4" "C:\Users\Navya gupta\OneDrive\Desktop\WhatsApp Video 2026-10-01 at 2.14.46 PM.mp4"
 ```
 
-`configs/test_case.yaml` and the public manifest contain C01 (Connaught Place) at 10:12:05 IST and C05 (New Delhi Railway Station) at 10:15:02 IST, 30 September 2026. Road length: 1.718512 km; assigned gap: 177 seconds; implied speed: 35.0 km/h. Coordinates come from the existing road-snapped nodes, not filming locations. The chooser reads the existing frontend graph, uses existing road routes when present, otherwise straight-line distance ×1.3, preserves explicit non-AUTO camera IDs and never edits camera data. It handles one to three files, but rejects impossible graph constraints: the current road graph has no distinct three-node chain with every direct leg within 1–3 km. The requested two-node chain is valid. Existing fixed nodes are never silently replaced.
+`configs/test_case.yaml` and the public manifest contain `CAM-PN-01` (Patel Nagar, approximately 28.645, 77.170) at 10:00 IST and `CAM-MN-01` (Moti Nagar, approximately 28.658, 77.142) at 10:15 IST on 2 November 2026. The connecting illustrative road edge is 3.2 km; the staged 15-minute gap implies 12.8 km/h. These are approximate map placements, not filming locations. The existing camera chooser remains available for other test cases.
 
 ### Test A — one upload without CSV
 
@@ -168,14 +168,14 @@ The automated moving-rectangle video fixture renders `DL04CT7391` with PIL and s
 
 ### Test B — two clips to Plate Trajectory
 
-1. Run the camera chooser, open `/ocr`, and choose **Load test case**. Exactly two files load with C01/C05 placements.
+1. Open `/ocr` and choose **Load test case**. Exactly two files load with `CAM-PN-01` / `CAM-MN-01` placements.
 2. Leave labels empty, enter a purpose and run the same upload pipeline. Expected text in the YAML is only a configurable scoring reference; it is never given to inference.
 3. Review voted reads. **Create trajectory** groups only accepted normalized plates; abstentions are excluded. Matching raw text below the vote threshold cannot create a shared journey.
 4. For accepted reads, inspect **Place on map**, its searchable camera node and IST timestamp, then click **Create trajectory**. Each plate gets one strongest accepted track per distinct clip, sorted by placement time. A single sighting is permitted and explicitly identified.
 5. Choose **Open in Plate Trajectory** and its new test-case preset. Existing presets, date searches and exports remain available.
 6. Scrub/replay at 1×–8×, select each stop, verify its video seeks to the first tracked appearance and use **Seek track** for the best measured OCR frame/box. Boxes are intentionally visible only around their actual evidence timestamp; they are not stretched across unanalysed video frames.
-7. Confirm generated/staged chips on header and stops, file-computed SHA-256, road distance, assigned speed and plausible travel. Dwell remains Not measured: a visible track duration does not establish stationary dwell.
-8. Export GeoJSON or print the case file; generated/staged properties and provenance remain present. Viewer output masks plate strings and withholds video pixels containing readable plates.
+7. Confirm real-footage and staged-placement provenance on header and stops, file-computed SHA-256, road distance, assigned speed and plausible travel. Dwell remains Not measured: a visible track duration does not establish stationary dwell.
+8. Export GeoJSON or print the case file; real-footage and staged-placement properties remain present. Viewer output masks plate strings and withholds video pixels containing readable plates.
 
 A new owner-scoped officer endpoint `/api/ocr/jobs/{job_id}/trajectories` derives stops from the server's completed job, never client-provided plate predictions. It writes `trajectory_created` into the existing audit chain with user, purpose, plate token, stop count and clip hashes, without raw plate text. The browser stores up to twenty live cases and independent local video object URLs in memory; reload/sign-out releases them. Leaving OCR still purges its job; the deliberately retained case references continue to play locally. Cases never write seeded sightings, benchmark files or held-out metrics.
 
@@ -186,6 +186,12 @@ Scoring is opt-in. The supplied clips may contain multiple vehicles, so filename
 The actual browser-started job used RapidOCR 1.4.4 / PP-OCRv4 on CPU, unchanged YOLOX + ByteTrack, stride **15**, no expected labels, and the complete two videos (10 seconds each). Both returned an accepted voted plate of `DL04CT7391`. Gemini clip: **0.8763** vote confidence, 5 reads; WhatsApp clip: **0.8662** vote confidence. The run finished with `scored: false`, no accuracy verdict and `purged: true`. There were 16 vehicle tracks in total; only the two accepted intended-vehicle reads entered the case. The earlier denser stride-5 diagnostic was interrupted before completion and is not the final result.
 
 The completed-job trajectory endpoint returned two stops, C01 then C05, 1.719 km and 35.0 km/h with no impossible-travel flag. First tracked appearances and best OCR evidence times are taken from the actual tracks. Vote confidence is not plate accuracy or proof that the clips depict one physical vehicle.
+
+### Two-camera staged demo update · 2 November 2026
+
+The repository manifest's prior `generated: true` flag was stale; the user confirmed these are real recordings. The manifest now says real footage. An authenticated `/api/ocr/jobs` run processed both exact files locally with RapidOCR 1.4.4 / PP-OCRv4 and YOLOX + ByteTrack, stride 15, without expected labels. The Gemini-named video returned `DL04CT7391` at 0.8757 vote confidence from 5 per-frame candidates; its best OCR frame was 135 (5.625 s), OCR confidence 0.9876. The WhatsApp-named video returned `DL04CT7391` at 0.8662 vote confidence from 6 candidates; its best frame was 105 (4.375 s), OCR confidence 0.9935. Both crops and all candidate text/scores are saved in the local, ignored `output/` folder. These confidence values are model scores, not an accuracy measurement.
+
+The staged placements are `CAM-PN-01` at Patel Nagar (approx. 28.645, 77.170) and `CAM-MN-01` at Moti Nagar (approx. 28.658, 77.142), 15 minutes apart. The illustrative graph edge is 3.2 km (12.8 km/h implied). The API job trajectory is an in-memory OCR review case; the separate seed script ingests accepted reads into the SQLite system of record and optionally refreshes the PostgreSQL proof mirror.
 
 Final regression commands: `python -m pytest tests pipeline/tests -q --basetemp=output/pytest-two-clips-regression` (**96 passed**, one upstream deprecation warning); `npm test` (**56 passed**, five files); `npm run build` (strict `tsc -b` plus Vite, passed). Existing test assertions were retained; `operations.test.tsx` gained additional cases and live-store cleanup. See [this update's complete file list](OCR_TWO_CLIP_FILES.md).
 

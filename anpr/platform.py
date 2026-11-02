@@ -38,10 +38,29 @@ class Platform:
             evidence = {'event_id': event['event_id'], 'camera_id': event['camera_id'], 'timestamp': timestamp,
                         'plate': plate, 'confidence': confidence, 'vehicle_type': event['vehicle_type'],
                         'identity_id': resolution['identity_id'], 'resolution': resolution,
-                        'reads': [asdict(r) for r in reads], 'source': event.get('source', 'api')}
+                        'reads': [asdict(r) for r in reads], 'source': event.get('source', 'api'),
+                        'metadata': event.get('metadata', {}), 'speed_kmph': event.get('speed_kmph'),
+                        'direction': event.get('direction')}
             detection = self.db.append(evidence)
             alerts = self.alert_engine.evaluate(detection)
+            self.db.conn.execute('INSERT OR IGNORE INTO alert_evaluations VALUES (?,?)', (detection['id'], utcnow()))
             return {'detection': detection, 'alerts': alerts, 'duplicate': False}
+
+    def poll_new_observations(self) -> dict:
+        """Evaluate hash-valid detections appended outside this process's API path."""
+        with self.db.transaction():
+            integrity = self.db.verify()
+            if not integrity['valid']:
+                return {'integrity': integrity, 'evaluated': 0, 'alerts': [], 'error': 'hash-chain verification failed'}
+            rows = self.db.rows('''SELECT d.* FROM detections d LEFT JOIN alert_evaluations e ON e.detection_id=d.id
+                                   WHERE e.detection_id IS NULL ORDER BY d.id''')
+            fired = []
+            for row in rows:
+                event = json.loads(row['payload'])
+                event.update({k: row[k] for k in ('id','identity_id','camera_id','timestamp','plate','confidence')})
+                fired.extend(self.alert_engine.evaluate(event))
+                self.db.conn.execute('INSERT OR IGNORE INTO alert_evaluations VALUES (?,?)', (row['id'], utcnow()))
+            return {'integrity': integrity, 'evaluated': len(rows), 'alerts': fired}
 
     def watch(self, plate: str, reason: str):
         plate = normalize(plate)

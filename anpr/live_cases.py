@@ -7,7 +7,7 @@ import re
 from datetime import datetime
 from pathlib import Path
 from pipeline.common import ROOT
-from .config import MAX_SPEED_KMH
+from .config import MAX_SPEED_KMH, CAMERAS as PLATFORM_CAMERAS, ROADS as PLATFORM_ROADS
 from .plates import normalize
 
 
@@ -33,6 +33,16 @@ def camera_graph(root=ROOT):
             points = list(reversed(points))
         edges[a, b] = (float(distance), points)
         edges[b, a] = (float(distance), list(reversed(points)))
+    # Add staged OCR demo nodes from the backend graph without changing demo seeds.
+    for camera in PLATFORM_CAMERAS:
+        if camera.id not in cameras:
+            cameras[camera.id] = dict(id=camera.id,name=camera.name,lat=camera.lat,lon=camera.lon)
+    for a,b,distance,_free in PLATFORM_ROADS:
+        if a not in cameras or b not in cameras or (a,b) in edges:
+            continue
+        points=[[cameras[a]['lon'],cameras[a]['lat']],[cameras[b]['lon'],cameras[b]['lat']]]
+        edges[a,b]=(float(distance),points)
+        edges[b,a]=(float(distance),list(reversed(points)))
     return cameras, edges
 
 
